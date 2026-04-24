@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Serve HR · Morning Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --md-primary: #D84315;
+  --md-primary-light: #FF6E40;
+  --md-on-primary: #FFFFFF;
+  --md-primary-container: #FFD8C6;
+  --md-on-primary-container: #3E0700;
+  --md-secondary: #7E5700;
+  --md-secondary-container: #FFDDB7;
+  --md-on-secondary-container: #271900;
+  --md-tertiary: #1A6B2E;
+  --md-tertiary-container: #B3F0C8;
+  --md-surface: #FFF8F5;
+  --md-surface-1: #FFEDE6;
+  --md-surface-2: #FFE4D9;
+  --md-surface-3: #FFD8C6;
+  --md-outline: #D4A998;
+  --md-outline-variant: #F0C9BB;
+  --md-on-surface: #201208;
+  --md-on-surface-var: #53342A;
+  --md-error: #BA1A1A;
+  --md-error-container: #FFDAD6;
+  --radius-xs: 8px;
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 28px;
+  --radius-full: 100px;
+  --elev-1: 0 1px 3px rgba(216,67,21,.12), 0 1px 2px rgba(216,67,21,.08);
+  --elev-2: 0 3px 8px rgba(216,67,21,.14), 0 1px 3px rgba(216,67,21,.10);
+  --elev-3: 0 6px 16px rgba(216,67,21,.16), 0 2px 6px rgba(216,67,21,.10);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Manrope',sans-serif;
+  background:var(--md-surface);
+  color:var(--md-on-surface);
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ─── HEADER ─── */
+.header{
+  background:linear-gradient(135deg, #BF360C 0%, #E64A19 40%, #FF6E40 100%);
+  padding:24px 20px 20px;
+  position:relative;
+  overflow:hidden;
+}
+.header::before{
+  content:'';
+  position:absolute;
+  top:-40px;right:-30px;
+  width:160px;height:160px;
+  background:rgba(255,255,255,.08);
+  border-radius:50%;
+}
+.header::after{
+  content:'';
+  position:absolute;
+  bottom:-50px;left:20px;
+  width:120px;height:120px;
+  background:rgba(255,255,255,.06);
+  border-radius:50%;
+}
+.header-inner{position:relative;z-index:1}
+.header-logo{
+  display:flex;align-items:center;gap:10px;margin-bottom:16px;
+}
+.logo-chip{
+  background:rgba(255,255,255,.2);
+  color:#fff;
+  font-family:'Syne',sans-serif;
+  font-size:11px;font-weight:700;
+  padding:4px 10px;
+  border-radius:var(--radius-full);
+  letter-spacing:.04em;text-transform:uppercase;
+}
+.header-greeting{
+  font-family:'Syne',sans-serif;
+  font-size:26px;font-weight:800;
+  color:#fff;
+  line-height:1.2;
+  margin-bottom:4px;
+}
+.header-date{
+  font-size:12px;color:rgba(255,255,255,.75);font-weight:500;
+  margin-bottom:16px;
+}
+.header-kpis{
+  display:grid;grid-template-columns:1fr 1fr 1fr;
+  gap:8px;
+}
+.hkpi{
+  background:rgba(255,255,255,.15);
+  backdrop-filter:blur(8px);
+  border-radius:var(--radius-md);
+  padding:10px 12px;
+  text-align:center;
+}
+.hkpi-val{
+  font-family:'Syne',sans-serif;
+  font-size:22px;font-weight:800;color:#fff;
+  line-height:1;
+}
+.hkpi-label{font-size:10px;color:rgba(255,255,255,.8);margin-top:3px;font-weight:600;text-transform:uppercase;letter-spacing:.03em}
+
+/* ─── TABS ─── */
+.tab-bar{
+  background:#fff;
+  padding:12px 16px;
+  display:flex;gap:6px;
+  overflow-x:auto;
+  position:sticky;top:0;z-index:100;
+  box-shadow:0 1px 0 var(--md-outline-variant);
+  scrollbar-width:none;
+}
+.tab-bar::-webkit-scrollbar{display:none}
+.tab-btn{
+  flex-shrink:0;
+  padding:8px 16px;
+  font-family:'Manrope',sans-serif;
+  font-size:12px;font-weight:600;
+  border:none;cursor:pointer;
+  border-radius:var(--radius-full);
+  background:transparent;
+  color:var(--md-on-surface-var);
+  transition:background .2s,color .2s,transform .15s;
+  white-space:nowrap;
+}
+.tab-btn:active{transform:scale(.95)}
+.tab-btn.active{
+  background:var(--md-primary-container);
+  color:var(--md-on-primary-container);
+  font-weight:700;
+}
+
+/* ─── PANELS ─── */
+.panel{display:none;padding:16px;animation:fadeUp .25s ease}
+.panel.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ─── CARDS ─── */
+.card{
+  background:#fff;
+  border-radius:var(--radius-xl);
+  padding:20px;
+  margin-bottom:12px;
+  box-shadow:var(--elev-1);
+  border:1px solid var(--md-outline-variant);
+}
+.card-title{
+  font-family:'Syne',sans-serif;
+  font-size:11px;font-weight:700;
+  color:var(--md-on-surface-var);
+  text-transform:uppercase;letter-spacing:.06em;
+  margin-bottom:14px;
+}
+.card-title-lg{
+  font-family:'Syne',sans-serif;
+  font-size:14px;font-weight:700;
+  color:var(--md-on-surface);
+  margin-bottom:14px;
+}
+
+/* ─── METRICS GRID ─── */
+.metrics-grid{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:10px;margin-bottom:12px;
+}
+.metric-card{
+  border-radius:var(--radius-lg);
+  padding:16px;
+  display:flex;flex-direction:column;
+  gap:6px;
+}
+.mc-1{background:var(--md-primary-container)}
+.mc-2{background:var(--md-secondary-container)}
+.mc-3{background:var(--md-tertiary-container)}
+.mc-4{background:#E3EAFF}
+.mc-5{background:#FFF0C7}
+.mc-6{background:#F5E6FF}
+.metric-num{
+  font-family:'Syne',sans-serif;
+  font-size:36px;font-weight:800;line-height:1;
+}
+.mc-1 .metric-num{color:var(--md-on-primary-container)}
+.mc-2 .metric-num{color:var(--md-on-secondary-container)}
+.mc-3 .metric-num{color:#0A3D1C}
+.mc-4 .metric-num{color:#1A2C6B}
+.mc-5 .metric-num{color:#4A3200}
+.mc-6 .metric-num{color:#3A1060}
+.metric-lbl{font-size:11px;font-weight:600;opacity:.75}
+.mc-1 .metric-lbl{color:var(--md-on-primary-container)}
+.mc-2 .metric-lbl{color:var(--md-on-secondary-container)}
+.mc-3 .metric-lbl{color:#0A3D1C}
+.mc-4 .metric-lbl{color:#1A2C6B}
+.mc-5 .metric-lbl{color:#4A3200}
+.mc-6 .metric-lbl{color:#3A1060}
+.metric-sub{font-size:11px;opacity:.55}
+
+/* ─── PROGRESS ─── */
+.progress-wrap{margin-bottom:10px}
+.progress-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.progress-name{font-size:12px;font-weight:600;color:var(--md-on-surface-var)}
+.progress-count{
+  font-family:'Syne',sans-serif;
+  font-size:12px;font-weight:700;color:var(--md-primary)
+}
+.progress-track{
+  height:8px;background:var(--md-surface-1);
+  border-radius:var(--radius-full);overflow:hidden;
+}
+.progress-fill{
+  height:100%;border-radius:var(--radius-full);
+  transition:width .4s cubic-bezier(.34,1.56,.64,1);
+}
+.pf-orange{background:linear-gradient(90deg,#E64A19,#FF6E40)}
+.pf-blue{background:linear-gradient(90deg,#1565C0,#42A5F5)}
+.pf-purple{background:linear-gradient(90deg,#6A1B9A,#AB47BC)}
+.pf-green{background:linear-gradient(90deg,#1B5E20,#66BB6A)}
+.pf-red{background:linear-gradient(90deg,#B71C1C,#EF5350)}
+.pf-amber{background:linear-gradient(90deg,#E65100,#FFA726)}
+
+/* ─── BADGES / CHIPS ─── */
+.chip{
+  display:inline-flex;align-items:center;
+  font-size:10px;font-weight:700;
+  padding:3px 10px;border-radius:var(--radius-full);
+  letter-spacing:.02em;text-transform:uppercase;
+}
+.ch-new{background:#E3EAFF;color:#1A2C6B}
+.ch-contacted{background:#EDE7F6;color:#4A148C}
+.ch-warm{background:var(--md-tertiary-container);color:#0A3D1C}
+.ch-meeting{background:var(--md-secondary-container);color:var(--md-on-secondary-container)}
+.ch-no{background:#FCE4EC;color:#880E4F}
+.ch-high{background:var(--md-error-container);color:var(--md-error)}
+.ch-medium{background:var(--md-secondary-container);color:var(--md-on-secondary-container)}
+.ch-low{background:var(--md-surface-1);color:var(--md-on-surface-var)}
+.ch-gd{background:var(--md-tertiary-container);color:#0A3D1C}
+.ch-ex{background:var(--md-primary-container);color:var(--md-on-primary-container)}
+.ch-gray{background:var(--md-surface-1);color:var(--md-on-surface-var)}
+.ch-pending{background:#FFF9C4;color:#4A3200}
+.ch-printed{background:#E3EAFF;color:#1A2C6B}
+.ch-sent{background:var(--md-secondary-container);color:var(--md-on-secondary-container)}
+.ch-delivered{background:#EDE7F6;color:#4A148C}
+.ch-responded{background:var(--md-tertiary-container);color:#0A3D1C}
+
+/* ─── LEAD ROWS ─── */
+.lead-row{
+  padding:12px 0;
+  border-bottom:1px solid var(--md-outline-variant);
+  display:flex;align-items:center;gap:8px;
+}
+.lead-row:last-child{border-bottom:none}
+.lead-dot{
+  width:10px;height:10px;border-radius:50%;flex-shrink:0;
+}
+.ld-new{background:#5E81E8}
+.ld-contacted{background:#9C6FDD}
+.ld-warm{background:#2E7D32}
+.ld-meeting{background:#E65100}
+.ld-no{background:#BDBDBD}
+.lead-company{
+  flex:1;font-size:13px;font-weight:600;
+  color:var(--md-on-surface);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  max-width:160px;
+}
+.lead-meta{
+  display:flex;gap:4px;align-items:center;flex-wrap:wrap;flex-shrink:0;
+}
+.lead-select{
+  font-size:10px;padding:4px 6px;
+  border:1px solid var(--md-outline-variant);
+  border-radius:var(--radius-sm);
+  background:var(--md-surface);
+  color:var(--md-on-surface-var);
+  cursor:pointer;outline:none;
+}
+
+/* ─── INPUTS ─── */
+.input-group{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+.input-row{display:flex;gap:8px;flex-wrap:wrap}
+.m3-input{
+  flex:1;min-width:120px;
+  padding:10px 14px;
+  border:1.5px solid var(--md-outline);
+  border-radius:var(--radius-sm);
+  font-family:'Manrope',sans-serif;
+  font-size:12px;
+  background:#fff;
+  color:var(--md-on-surface);
+  outline:none;
+  transition:border-color .2s;
+}
+.m3-input:focus{border-color:var(--md-primary)}
+.m3-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:10px 20px;
+  border:none;cursor:pointer;
+  border-radius:var(--radius-full);
+  font-family:'Syne',sans-serif;
+  font-size:12px;font-weight:700;
+  background:var(--md-primary);
+  color:var(--md-on-primary);
+  transition:background .15s,box-shadow .15s,transform .1s;
+  box-shadow:var(--elev-1);
+}
+.m3-btn:active{transform:scale(.97);box-shadow:none}
+.m3-btn:hover{background:#BF360C;box-shadow:var(--elev-2)}
+.m3-btn-tonal{
+  background:var(--md-primary-container);
+  color:var(--md-on-primary-container);
+  box-shadow:none;
+}
+.m3-btn-tonal:hover{background:#FCCFB6}
+
+/* ─── FOLLOW UP ITEMS ─── */
+.fu-item{
+  display:flex;gap:10px;align-items:flex-start;
+  padding:12px 0;border-bottom:1px solid var(--md-outline-variant);
+}
+.fu-item:last-child{border-bottom:none}
+.fu-icon{
+  min-width:36px;height:36px;border-radius:var(--radius-sm);
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;flex-shrink:0;
+}
+.fu-urgent{background:var(--md-error-container)}
+.fu-soon{background:var(--md-secondary-container)}
+.fu-later{background:var(--md-surface-1)}
+.fu-title{font-size:13px;font-weight:600;color:var(--md-on-surface)}
+.fu-desc{font-size:11px;color:var(--md-on-surface-var);margin-top:2px}
+.done-btn{
+  padding:6px 12px;border:1.5px solid var(--md-outline);
+  border-radius:var(--radius-full);background:transparent;
+  font-size:10px;font-weight:700;cursor:pointer;
+  color:var(--md-on-surface-var);
+  font-family:'Manrope',sans-serif;
+  transition:background .15s,color .15s;
+}
+.done-btn:hover{background:var(--md-surface-1)}
+
+/* ─── BAR CHART ─── */
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.bar-label{font-size:11px;color:var(--md-on-surface-var);min-width:100px;font-weight:500}
+.bar-track{flex:1;height:20px;background:var(--md-surface-1);border-radius:var(--radius-full);overflow:hidden}
+.bar-fill{height:100%;border-radius:var(--radius-full);transition:width .5s cubic-bezier(.34,1.56,.64,1)}
+.bar-val{font-size:11px;color:var(--md-on-surface-var);font-weight:700;min-width:20px}
+
+/* ─── URGENCY CARDS ─── */
+.urgency-card{
+  background:var(--md-secondary-container);
+  border-radius:var(--radius-lg);
+  padding:14px 16px;margin-bottom:10px;
+}
+.urgency-title{
+  font-family:'Syne',sans-serif;
+  font-size:13px;font-weight:700;
+  color:var(--md-on-secondary-container);margin-bottom:6px;
+}
+.urgency-pitch{
+  font-size:12px;color:var(--md-on-secondary-container);
+  opacity:.85;font-style:italic;line-height:1.5;
+}
+.urgency-card:nth-child(even){
+  background:var(--md-primary-container);
+}
+.urgency-card:nth-child(even) .urgency-title,
+.urgency-card:nth-child(even) .urgency-pitch{color:var(--md-on-primary-container)}
+
+/* ─── JOURNAL ─── */
+.journal-entry{
+  padding:12px;background:var(--md-surface-1);
+  border-radius:var(--radius-md);margin-bottom:8px;
+}
+.je-date{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;margin-bottom:8px}
+.je-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px}
+.je-note{font-size:11px;color:var(--md-on-surface-var);font-style:italic;margin-top:4px}
+
+/* ─── EMPTY STATE ─── */
+.empty{
+  text-align:center;padding:24px 16px;
+  font-size:12px;color:var(--md-on-surface-var);
+}
+.empty-icon{font-size:32px;display:block;margin-bottom:8px}
+
+/* ─── WEEK TARGET RING ─── */
+.target-row{display:flex;align-items:center;gap:16px;margin-bottom:4px}
+.target-ring{position:relative;width:72px;height:72px;flex-shrink:0}
+.ring-svg{transform:rotate(-90deg)}
+.ring-bg{fill:none;stroke:var(--md-outline-variant);stroke-width:8}
+.ring-fill{fill:none;stroke:var(--md-primary);stroke-width:8;stroke-linecap:round;transition:stroke-dashoffset .6s cubic-bezier(.34,1.56,.64,1)}
+.ring-text{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+}
+.ring-num{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--md-primary)}
+.ring-of{font-size:9px;color:var(--md-on-surface-var);font-weight:600}
+.target-info h3{font-family:'Syne',sans-serif;font-size:14px;font-weight:700}
+.target-info p{font-size:11px;color:var(--md-on-surface-var);margin-top:2px}
+
+/* ─── SECTION DIVIDER ─── */
+.section-label{
+  font-family:'Syne',sans-serif;
+  font-size:10px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.06em;
+  color:var(--md-on-surface-var);
+  margin:16px 0 8px;
+  display:flex;align-items:center;gap:8px;
+}
+.section-label::after{content:'';flex:1;height:1px;background:var(--md-outline-variant)}
+
+/* ─── RESPONSIVE ─── */
+@media(min-width:480px){
+  .metrics-grid{grid-template-columns:1fr 1fr 1fr}
+  .header-kpis{grid-template-columns:repeat(6,1fr)}
+}
+
+/* ─── PC LAYOUT ─── */
+.page-wrap{
+  max-width:720px;
+  margin:0 auto;
+  min-height:100vh;
+  background:var(--md-surface);
+  box-shadow:0 0 0 1px var(--md-outline-variant);
+}
+@media(min-width:740px){
+  body{background:#F0E6E0}
+  .header{border-radius:0}
+  .tab-bar{border-radius:0}
+  .panel{padding:20px 24px}
+  .card{border-radius:var(--radius-xl)}
+  .metrics-grid{grid-template-columns:repeat(3,1fr)}
+  .header-kpis{grid-template-columns:repeat(3,1fr)}
+  .input-row{flex-wrap:nowrap}
+  .bar-label{min-width:130px}
+  .lead-company{max-width:240px}
+}
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-inner">
+    <div class="header-logo">
+      <span class="logo-chip">Serve HR · Pre-Sales</span>
+    </div>
+    <div class="header-greeting" id="greet-text">Good morning, Rohit!</div>
+    <div class="header-date" id="date-line"></div>
+    <div class="header-kpis">
+      <div class="hkpi"><div class="hkpi-val" id="hk-total">16</div><div class="hkpi-label">Total Leads</div></div>
+      <div class="hkpi"><div class="hkpi-val" id="hk-warm">1</div><div class="hkpi-label">Warm</div></div>
+      <div class="hkpi"><div class="hkpi-val" id="hk-brochure">6</div><div class="hkpi-label">Brochures</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="showTab('overview')">Overview</button>
+  <button class="tab-btn" onclick="showTab('leads')">Leads</button>
+  <button class="tab-btn" onclick="showTab('brochure')">Brochures</button>
+  <button class="tab-btn" onclick="showTab('analytics')">Analytics</button>
+  <button class="tab-btn" onclick="showTab('followups')">Follow Ups</button>
+  <button class="tab-btn" onclick="showTab('urgency')">Today's Pitch</button>
+  <button class="tab-btn" onclick="showTab('journal')">Journal</button>
+</div>
+
+<!-- ══════════════════════════════ OVERVIEW ══════════════════════════════ -->
+<div id="overview" class="panel active">
+  <div class="metrics-grid">
+    <div class="metric-card mc-1">
+      <div class="metric-num" id="m-total">16</div>
+      <div class="metric-lbl">Total Leads</div>
+    </div>
+    <div class="metric-card mc-2">
+      <div class="metric-num" id="m-warm">1</div>
+      <div class="metric-lbl">Warm / Responded</div>
+    </div>
+    <div class="metric-card mc-3">
+      <div class="metric-num" id="m-new">6</div>
+      <div class="metric-lbl">New Uncontacted</div>
+    </div>
+    <div class="metric-card mc-4">
+      <div class="metric-num" id="m-brochure">6</div>
+      <div class="metric-lbl">Brochure List</div>
+    </div>
+    <div class="metric-card mc-5">
+      <div class="metric-num" id="m-broch-sent">0</div>
+      <div class="metric-lbl">Dispatched</div>
+      <div class="metric-sub" id="m-broch-pct">—</div>
+    </div>
+    <div class="metric-card mc-6">
+      <div class="metric-num" id="m-responded">1</div>
+      <div class="metric-lbl">Responded</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Weekly Brochure Target — 100</div>
+    <div class="target-row">
+      <div class="target-ring">
+        <svg class="ring-svg" width="72" height="72" viewBox="0 0 72 72">
+          <circle class="ring-bg" cx="36" cy="36" r="28"/>
+          <circle class="ring-fill" id="ring-fill" cx="36" cy="36" r="28"
+            stroke-dasharray="175.93" stroke-dashoffset="175.93"/>
+        </svg>
+        <div class="ring-text">
+          <span class="ring-num" id="ring-num">0</span>
+          <span class="ring-of">/ 100</span>
+        </div>
+      </div>
+      <div class="target-info">
+        <h3>Brochures Dispatched</h3>
+        <p id="ring-sub">Start dispatching — 6 ready to mail</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Lead Pipeline</div>
+    <div class="progress-wrap">
+      <div class="progress-head"><span class="progress-name">New — Uncontacted</span><span class="progress-count" id="s-new-label">0</span></div>
+      <div class="progress-track"><div class="progress-fill pf-blue" id="s-new-bar" style="width:0%"></div></div>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-head"><span class="progress-name">Contacted — Awaiting</span><span class="progress-count" id="s-contact-label">0</span></div>
+      <div class="progress-track"><div class="progress-fill pf-purple" id="s-contact-bar" style="width:0%"></div></div>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-head"><span class="progress-name">Responded — Warm</span><span class="progress-count" id="s-warm-label">0</span></div>
+      <div class="progress-track"><div class="progress-fill pf-green" id="s-warm-bar" style="width:0%"></div></div>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-head"><span class="progress-name">Meeting Scheduled</span><span class="progress-count" id="s-meet-label">0</span></div>
+      <div class="progress-track"><div class="progress-fill pf-amber" id="s-meet-bar" style="width:0%"></div></div>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-head"><span class="progress-name">Not Interested</span><span class="progress-count" id="s-no-label">0</span></div>
+      <div class="progress-track"><div class="progress-fill pf-red" id="s-no-bar" style="width:0%"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════ LEADS ══════════════════════════════ -->
+<div id="leads" class="panel">
+  <div class="card">
+    <div class="card-title">Add New Lead</div>
+    <div class="input-row" style="margin-bottom:8px">
+      <input class="m3-input" type="text" id="l-company" placeholder="Company name"/>
+      <input class="m3-input" type="text" id="l-contact" placeholder="Contact name"/>
+    </div>
+    <div class="input-row" style="margin-bottom:8px">
+      <select class="m3-input" id="l-source">
+        <option value="GD">Google Dorks</option>
+        <option value="AP">Apollo</option>
+        <option value="LI">LinkedIn</option>
+        <option value="JD">Justdial</option>
+        <option value="ZC">Zauba Corp</option>
+        <option value="HU">Hunter.io</option>
+        <option value="EX">Existing</option>
+      </select>
+      <select class="m3-input" id="l-industry">
+        <option>Manufacturing</option><option>Pharma</option><option>Chemicals</option>
+        <option>Electrical</option><option>IT/Tech</option><option>FMCG</option>
+        <option>Food/FMCG</option><option>Construction</option><option>BPO</option>
+        <option>EdTech</option><option>Agro/FMCG</option><option>Other</option>
+      </select>
+      <select class="m3-input" id="l-location">
+        <option>Mumbai</option><option>Navi Mumbai</option><option>Dombivli</option>
+        <option>Turbhe MIDC</option><option>Taloja MIDC</option><option>Dombivli MIDC</option>
+        <option>Thane</option><option>Andheri</option><option>Other</option>
+      </select>
+    </div>
+    <div class="input-row" style="margin-bottom:12px">
+      <select class="m3-input" id="l-stage">
+        <option value="new">New — Not Contacted</option>
+        <option value="contacted">Contacted — Awaiting</option>
+        <option value="warm">Responded — Warm</option>
+        <option value="meeting">Meeting Scheduled</option>
+        <option value="no">Not Interested</option>
+      </select>
+      <input class="m3-input" type="text" id="l-note" placeholder="Note (optional)"/>
+    </div>
+    <button class="m3-btn" onclick="addLead()">Add Lead →</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">All Leads (<span id="lead-count">0</span>)</div>
+    <div id="lead-list"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════ BROCHURES ══════════════════════════════ -->
+<div id="brochure" class="panel">
+  <div class="card">
+    <div class="card-title">Add Company</div>
+    <div class="input-row" style="margin-bottom:8px">
+      <input class="m3-input" type="text" id="b-company" placeholder="Company name"/>
+      <select class="m3-input" id="b-location">
+        <option>Dombivli MIDC</option><option>Turbhe MIDC</option><option>Taloja MIDC</option>
+        <option>Ambernath MIDC</option><option>Wagle Estate</option><option>Other</option>
+      </select>
+    </div>
+    <div class="input-row" style="margin-bottom:12px">
+      <select class="m3-input" id="b-status">
+        <option value="pending">Address Found — Not Sent</option>
+        <option value="printed">Printed</option>
+        <option value="sent">Dispatched</option>
+        <option value="delivered">Delivered</option>
+        <option value="responded">Responded</option>
+      </select>
+      <input class="m3-input" type="text" id="b-industry" placeholder="Industry"/>
+    </div>
+    <button class="m3-btn" onclick="addBrochure()">Add Company →</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Weekly Target — 100 Dispatched</div>
+    <div class="target-row" style="margin-bottom:12px">
+      <div class="target-ring">
+        <svg class="ring-svg" width="72" height="72" viewBox="0 0 72 72">
+          <circle class="ring-bg" cx="36" cy="36" r="28"/>
+          <circle class="ring-fill" id="b-ring-fill" cx="36" cy="36" r="28"
+            stroke-dasharray="175.93" stroke-dashoffset="175.93"/>
+        </svg>
+        <div class="ring-text">
+          <span class="ring-num" id="b-week-num">0</span>
+          <span class="ring-of">/ 100</span>
+        </div>
+      </div>
+      <div class="target-info" style="display:flex;flex-direction:column;gap:6px">
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <span class="chip ch-pending">Ready: <b id="b-pending">0</b></span>
+          <span class="chip ch-printed">Printed: <b id="b-printed">0</b></span>
+          <span class="chip ch-sent">Sent: <b id="b-sent">0</b></span>
+          <span class="chip ch-responded">Responded: <b id="b-responded">0</b></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Brochure List (<span id="b-count">0</span>)</div>
+    <div id="b-list"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════ ANALYTICS ══════════════════════════════ -->
+<div id="analytics" class="panel">
+  <div class="card">
+    <div class="card-title-lg">Leads by Industry</div>
+    <div id="industry-chart"></div>
+  </div>
+  <div class="card">
+    <div class="card-title-lg">Leads by Location</div>
+    <div id="location-chart"></div>
+  </div>
+  <div class="card">
+    <div class="card-title-lg">By Source</div>
+    <div id="source-chart"></div>
+  </div>
+  <div class="card">
+    <div class="card-title-lg">Response Breakdown</div>
+    <div id="response-chart"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════ FOLLOWUPS ══════════════════════════════ -->
+<div id="followups" class="panel">
+  <div class="card">
+    <div class="card-title">Pending Follow Ups</div>
+    <div id="followup-list"><div class="empty"><span class="empty-icon">✅</span>No pending follow ups — great work!</div></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Add Manual Follow Up</div>
+    <div class="input-row" style="margin-bottom:8px">
+      <input class="m3-input" type="text" id="f-company" placeholder="Company name"/>
+      <input class="m3-input" type="text" id="f-action" placeholder="What to do"/>
+    </div>
+    <div class="input-row" style="margin-bottom:12px">
+      <select class="m3-input" id="f-urgency">
+        <option value="urgent">Urgent — Today</option>
+        <option value="soon">Soon — This Week</option>
+        <option value="later">Later — Next Week</option>
+      </select>
+    </div>
+    <button class="m3-btn" onclick="addFollowUp()">Add Follow Up →</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════ URGENCY ══════════════════════════════ -->
+<div id="urgency" class="panel">
+  <div class="card">
+    <div class="card-title-lg">Today's Urgency Pitches</div>
+    <p style="font-size:11px;color:var(--md-on-surface-var);margin-bottom:16px">Use these hooks in your calls and emails today.</p>
+    <div id="urgency-boxes"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════ JOURNAL ══════════════════════════════ -->
+<div id="journal" class="panel">
+  <div class="card">
+    <div class="card-title">End of Day — Log Today's Activity</div>
+    <div class="input-row" style="margin-bottom:8px">
+      <input class="m3-input" type="number" id="j-leads" placeholder="New leads found" min="0"/>
+      <input class="m3-input" type="number" id="j-calls" placeholder="Calls made" min="0"/>
+    </div>
+    <div class="input-row" style="margin-bottom:8px">
+      <input class="m3-input" type="number" id="j-brochures" placeholder="Brochures dispatched" min="0"/>
+      <input class="m3-input" type="number" id="j-linkedin" placeholder="LinkedIn requests" min="0"/>
+    </div>
+    <div class="input-row" style="margin-bottom:12px">
+      <input class="m3-input" type="number" id="j-responses" placeholder="Responses received" min="0"/>
+      <input class="m3-input" type="text" id="j-note" placeholder="Notable win or observation?"/>
+    </div>
+    <button class="m3-btn" onclick="saveJournal()">Save Entry →</button>
+  </div>
+  <div class="card">
+    <div class="card-title">Journal History</div>
+    <div id="journal-history"><div class="empty"><span class="empty-icon">📓</span>No entries yet. Log every evening.</div></div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────
+//  DATA BOOTSTRAP — pre-populated from sheets
+// ─────────────────────────────────────────────────────────────
+const SEED_LEADS = [
+  {id:1,  company:'Servotech',                         location:'Mumbai',     industry:'Industrial/Engineering',source:'EX',stage:'contacted',followup:true},
+  {id:2,  company:'Amitex Agro Products',              location:'Mumbai',     industry:'Agro/FMCG',           source:'EX',stage:'contacted',followup:true},
+  {id:3,  company:'Teleperformance',                   location:'Haryana',    industry:'BPO/Call Center',     source:'EX',stage:'no',       followup:false},
+  {id:4,  company:'UniAcco (Amit Singh)',               location:'Mumbai',     industry:'EdTech',              source:'EX',stage:'contacted',followup:true},
+  {id:5,  company:'UniAcco (Aditya Jaiswal)',           location:'Mumbai',     industry:'EdTech',              source:'EX',stage:'contacted',followup:true},
+  {id:6,  company:'Tit-Bit Foods India Pvt. Ltd.',     location:'Navi Mumbai',industry:'Food/FMCG',           source:'EX',stage:'contacted',followup:true},
+  {id:7,  company:'Crimson Interactive',               location:'Mumbai',     industry:'EdTech/Publishing',   source:'EX',stage:'contacted',followup:false},
+  {id:8,  company:'Nano-Mag Technologies Pvt. Ltd.',   location:'Mumbai',     industry:'Manufacturing',       source:'EX',stage:'no',       followup:false},
+  {id:9,  company:'Bharat Bijlee Ltd',                 location:'Mumbai',     industry:'Electrical Engineering',source:'EX',stage:'contacted',followup:true},
+  {id:10, company:'V-Ensure Pharma Technologies',      location:'Navi Mumbai',industry:'Pharma',              source:'EX',stage:'warm',     followup:true},
+  {id:11, company:'Gharda Chemicals Ltd',              location:'Dombivli',   industry:'Chemicals',           source:'GD',stage:'new',      followup:false},
+  {id:12, company:'Connectwell Industries',            location:'Dombivli',   industry:'Electrical',          source:'GD',stage:'new',      followup:false},
+  {id:13, company:'Indo Amines Ltd',                   location:'Dombivli',   industry:'Chemicals',           source:'GD',stage:'new',      followup:false},
+  {id:14, company:'Metropolitan Eximchem',             location:'Dombivli',   industry:'Chemicals',           source:'GD',stage:'new',      followup:false},
+  {id:15, company:'Aceto Pharma India',                location:'Dombivli',   industry:'Pharma',              source:'GD',stage:'new',      followup:false},
+  {id:16, company:'Manbro Pharma',                     location:'Dombivli',   industry:'Pharma',              source:'GD',stage:'new',      followup:false},
+];
+
+const SEED_BROCHURES = [
+  {id:1, company:'Gharda Chemicals Ltd',    location:'Dombivli MIDC', status:'pending'},
+  {id:2, company:'Connectwell Industries',  location:'Dombivli MIDC', status:'pending'},
+  {id:3, company:'Indo Amines Ltd',         location:'Dombivli MIDC', status:'pending'},
+  {id:4, company:'Metropolitan Eximchem',   location:'Dombivli MIDC', status:'pending'},
+  {id:5, company:'Aceto Pharma India',      location:'Dombivli MIDC', status:'pending'},
+  {id:6, company:'Manbro Pharma',           location:'Dombivli MIDC', status:'pending'},
+];
+
+// ─────────────────────────────────────────────────────────────
+//  STORAGE
+// ─────────────────────────────────────────────────────────────
+function load(key, fallback){
+  try{const v=localStorage.getItem(key);return v?JSON.parse(v):fallback}catch(e){return fallback}
+}
+function save(key,val){try{localStorage.setItem(key,JSON.stringify(val))}catch(e){}}
+
+let leads     = load('shr_leads_v2',     null);
+let brochures = load('shr_brochures_v2', null);
+let followups = load('shr_followups',    []);
+let journals  = load('shr_journals',     []);
+
+// Seed on first run
+if(!leads)     { leads     = SEED_LEADS.map(l=>({...l}));    save('shr_leads_v2',leads); }
+if(!brochures) { brochures = SEED_BROCHURES.map(b=>({...b}));save('shr_brochures_v2',brochures); }
+
+let nextLeadId   = leads.reduce((m,l)=>Math.max(m,l.id),0)+1;
+let nextBrochId  = brochures.reduce((m,b)=>Math.max(m,b.id),0)+1;
+let nextFollowId = followups.reduce((m,f)=>Math.max(m,f.id||0),0)+1;
+
+// ─────────────────────────────────────────────────────────────
+//  DATE / GREETING
+// ─────────────────────────────────────────────────────────────
+const now = new Date();
+const tz = 'Asia/Kolkata';
+const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const h = parseInt(new Date().toLocaleTimeString('en-IN',{timeZone:tz,hour12:false}).split(':')[0]);
+const greet = h<12?'Good morning':h<17?'Good afternoon':'Good evening';
+document.getElementById('greet-text').textContent = `${greet}, Rohit!`;
+document.getElementById('date-line').textContent =
+  `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()} · Dombivli MIDC focus today`;
+
+// ─────────────────────────────────────────────────────────────
+//  TABS
+// ─────────────────────────────────────────────────────────────
+function showTab(id){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelector(`[onclick="showTab('${id}')"]`).classList.add('active');
+  render();
+}
+
+// ─────────────────────────────────────────────────────────────
+//  ADD LEAD
+// ─────────────────────────────────────────────────────────────
+function addLead(){
+  const co = document.getElementById('l-company').value.trim();
+  if(!co) return;
+  leads.push({
+    id:nextLeadId++,
+    company:co,
+    contact:document.getElementById('l-contact').value.trim(),
+    source:document.getElementById('l-source').value,
+    industry:document.getElementById('l-industry').value,
+    location:document.getElementById('l-location').value,
+    stage:document.getElementById('l-stage').value,
+    followup:['contacted','warm'].includes(document.getElementById('l-stage').value),
+    note:document.getElementById('l-note').value.trim(),
+  });
+  ['l-company','l-contact','l-note'].forEach(id=>document.getElementById(id).value='');
+  save('shr_leads_v2',leads);
+  render();
+}
+
+// ─────────────────────────────────────────────────────────────
+//  UPDATE STAGE
+// ─────────────────────────────────────────────────────────────
+function updateStage(id,val){
+  const l=leads.find(x=>x.id===id);
+  if(l){l.stage=val;l.followup=['contacted','warm'].includes(val);}
+  save('shr_leads_v2',leads);
+  render();
+}
+
+// ─────────────────────────────────────────────────────────────
+//  ADD BROCHURE
+// ─────────────────────────────────────────────────────────────
+function addBrochure(){
+  const co=document.getElementById('b-company').value.trim();
+  if(!co) return;
+  brochures.push({
+    id:nextBrochId++,
+    company:co,
+    location:document.getElementById('b-location').value,
+    status:document.getElementById('b-status').value,
+    industry:document.getElementById('b-industry').value.trim(),
+  });
+  document.getElementById('b-company').value='';
+  document.getElementById('b-industry').value='';
+  save('shr_brochures_v2',brochures);
+  render();
+}
+
+function updateBrochStatus(id,val){
+  const b=brochures.find(x=>x.id===id);
+  if(b)b.status=val;
+  save('shr_brochures_v2',brochures);
+  render();
+}
+
+// ─────────────────────────────────────────────────────────────
+//  FOLLOW UPS
+// ─────────────────────────────────────────────────────────────
+function addFollowUp(){
+  const co=document.getElementById('f-company').value.trim();
+  const ac=document.getElementById('f-action').value.trim();
+  if(!co||!ac) return;
+  followups.push({id:nextFollowId++,company:co,action:ac,urgency:document.getElementById('f-urgency').value,
+    date:new Date().toLocaleDateString('en-IN'),done:false});
+  document.getElementById('f-company').value='';
+  document.getElementById('f-action').value='';
+  save('shr_followups',followups);
+  render();
+}
+
+function markDone(id){
+  const f=followups.find(x=>x.id===id);
+  if(f)f.done=true;
+  save('shr_followups',followups);
+  render();
+}
+
+// ─────────────────────────────────────────────────────────────
+//  JOURNAL
+// ─────────────────────────────────────────────────────────────
+function saveJournal(){
+  const j={
+    date:new Date().toLocaleDateString('en-IN'),
+    leads:parseInt(document.getElementById('j-leads').value)||0,
+    calls:parseInt(document.getElementById('j-calls').value)||0,
+    brochures:parseInt(document.getElementById('j-brochures').value)||0,
+    linkedin:parseInt(document.getElementById('j-linkedin').value)||0,
+    responses:parseInt(document.getElementById('j-responses').value)||0,
+    note:document.getElementById('j-note').value.trim(),
+  };
+  journals.unshift(j);
+  if(journals.length>30)journals.pop();
+  ['j-leads','j-calls','j-brochures','j-linkedin','j-responses'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('j-note').value='';
+  save('shr_journals',journals);
+  render();
+}
+
+// ─────────────────────────────────────────────────────────────
+//  BAR CHART
+// ─────────────────────────────────────────────────────────────
+const barColors=['pf-orange','pf-blue','pf-purple','pf-green','pf-amber','pf-red'];
+function barChart(elId,data,colorClass){
+  const el=document.getElementById(elId);
+  if(!el) return;
+  const sorted=Object.entries(data).sort((a,b)=>b[1]-a[1]);
+  const max=sorted[0]?.[1]||1;
+  el.innerHTML=sorted.map(([k,v],i)=>`
+    <div class="bar-row">
+      <span class="bar-label">${k}</span>
+      <div class="bar-track"><div class="bar-fill ${barColors[i%barColors.length]}" style="width:${Math.round(v/max*100)}%"></div></div>
+      <span class="bar-val">${v}</span>
+    </div>`).join('');
+}
+
+// ─────────────────────────────────────────────────────────────
+//  RING
+// ─────────────────────────────────────────────────────────────
+function setRing(fillId,numId,val,max){
+  const c=175.93;
+  const pct=Math.min(val/max,1);
+  const el=document.getElementById(fillId);
+  if(el)el.style.strokeDashoffset=String(c-(c*pct));
+  const ne=document.getElementById(numId);
+  if(ne)ne.textContent=String(val);
+}
+
+// ─────────────────────────────────────────────────────────────
+//  STAGE / STATUS LABELS
+// ─────────────────────────────────────────────────────────────
+const stageLabel={new:'New',contacted:'Contacted',warm:'Warm',meeting:'Meeting',no:'Not Interested'};
+const stageCls  ={new:'ch-new',contacted:'ch-contacted',warm:'ch-warm',meeting:'ch-meeting',no:'ch-no'};
+const bStatusLabel={pending:'Ready to Mail',printed:'Printed',sent:'Dispatched',delivered:'Delivered',responded:'Responded'};
+const bStatusCls  ={pending:'ch-pending',printed:'ch-printed',sent:'ch-sent',delivered:'ch-delivered',responded:'ch-responded'};
+const sourceFull  ={GD:'Google Dorks',AP:'Apollo',LI:'LinkedIn',JD:'Justdial',ZC:'Zauba Corp',HU:'Hunter.io',EX:'Existing'};
+
+// ─────────────────────────────────────────────────────────────
+//  RENDER
+// ─────────────────────────────────────────────────────────────
+function render(){
+  // ── counts ──
+  const stages={new:0,contacted:0,warm:0,meeting:0,no:0};
+  leads.forEach(l=>stages[l.stage]=(stages[l.stage]||0)+1);
+  const responded=(stages.warm||0)+(stages.meeting||0);
+  const total=leads.length;
+  const brochSent=brochures.filter(b=>b.status==='sent'||b.status==='delivered'||b.status==='responded').length;
+  const brochWeek=brochSent; // week approximation
+  const brochWeekPct=Math.round(brochWeek/100*100);
+
+  // ── header KPIs ──
+  ['hk-total','m-total'].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=total});
+  ['hk-warm','m-warm','m-responded'].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=responded});
+  ['hk-brochure','m-brochure'].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=brochures.length});
+  const mn=document.getElementById('m-new');if(mn)mn.textContent=stages.new||0;
+  const ms=document.getElementById('m-broch-sent');if(ms)ms.textContent=brochSent;
+  const mp=document.getElementById('m-broch-pct');if(mp)mp.textContent=brochSent>0?`${Math.round(brochSent/brochures.length*100)}% of list`:'—';
+
+  // ── ring ──
+  setRing('ring-fill','ring-num',brochWeek,100);
+  setRing('b-ring-fill','b-week-num',brochWeek,100);
+  const rs=document.getElementById('ring-sub');
+  if(rs)rs.textContent=brochWeek===0?`${brochures.filter(b=>b.status==='pending').length} companies ready to mail`:`${brochWeek} dispatched — ${100-brochWeek} to go`;
+
+  // ── pipeline bars ──
+  const maxS=Math.max(1,...Object.values(stages));
+  [['new','s-new','pf-blue'],['contacted','s-contact','pf-purple'],['warm','s-warm','pf-green'],['meeting','s-meet','pf-amber'],['no','s-no','pf-red']]
+    .forEach(([key,idPfx])=>{
+      const v=stages[key]||0;
+      const lb=document.getElementById(`${idPfx}-label`);
+      const br=document.getElementById(`${idPfx}-bar`);
+      if(lb)lb.textContent=v;
+      if(br)br.style.width=Math.round(v/maxS*100)+'%';
+    });
+
+  // ── lead list ──
+  const ll=document.getElementById('lead-list');
+  if(ll){
+    if(!leads.length){
+      ll.innerHTML='<div class="empty"><span class="empty-icon">🔍</span>No leads yet. Add your first lead above.</div>';
+    }else{
+      ll.innerHTML=leads.slice().reverse().map(l=>`
+        <div class="lead-row">
+          <div class="lead-dot ld-${l.stage}"></div>
+          <div class="lead-company">${l.company}</div>
+          <div class="lead-meta">
+            <span class="chip ${stageCls[l.stage]}">${stageLabel[l.stage]}</span>
+            <span class="chip ${l.source==='GD'?'ch-gd':'ch-ex'}">${l.source}</span>
+            <select class="lead-select" onchange="updateStage(${l.id},this.value)">
+              ${Object.entries(stageLabel).map(([k,v])=>`<option value="${k}"${l.stage===k?' selected':''}>${v}</option>`).join('')}
+            </select>
+          </div>
+        </div>`).join('');
+    }
+    document.getElementById('lead-count').textContent=leads.length;
+  }
+
+  // ── brochure list ──
+  const bl=document.getElementById('b-list');
+  if(bl){
+    if(!brochures.length){
+      bl.innerHTML='<div class="empty"><span class="empty-icon">📬</span>No companies added yet.</div>';
+    }else{
+      bl.innerHTML=brochures.slice().reverse().map(b=>`
+        <div class="lead-row">
+          <div class="lead-company">${b.company}</div>
+          <div class="lead-meta">
+            <span class="chip ch-gray">${b.location}</span>
+            <span class="chip ${bStatusCls[b.status]}">${bStatusLabel[b.status]}</span>
+            <select class="lead-select" onchange="updateBrochStatus(${b.id},this.value)">
+              ${Object.entries(bStatusLabel).map(([k,v])=>`<option value="${k}"${b.status===k?' selected':''}>${v}</option>`).join('')}
+            </select>
+          </div>
+        </div>`).join('');
+    }
+    document.getElementById('b-count').textContent=brochures.length;
+  }
+
+  // ── brochure stats ──
+  const counts={pending:0,printed:0,sent:0,responded:0};
+  brochures.forEach(b=>{const k=b.status==='delivered'?'sent':b.status; if(counts[k]!==undefined)counts[k]++;});
+  ['pending','printed','sent','responded'].forEach(k=>{
+    const e=document.getElementById(`b-${k}`);if(e)e.textContent=counts[k];
+  });
+
+  // ── analytics ──
+  const industries={},locations={},sources={};
+  leads.forEach(l=>{
+    industries[l.industry]=(industries[l.industry]||0)+1;
+    locations[l.location]=(locations[l.location]||0)+1;
+    sources[sourceFull[l.source]||l.source]=(sources[sourceFull[l.source]||l.source]||0)+1;
+  });
+  barChart('industry-chart',industries,'pf-orange');
+  barChart('location-chart',locations,'pf-blue');
+  barChart('source-chart',sources,'pf-green');
+  barChart('response-chart',{
+    'Responded':responded,
+    'Not Interested':stages.no||0,
+    'Awaiting':(stages.contacted||0)+(stages.new||0)
+  },'pf-amber');
+
+  // ── follow ups ──
+  const fl=document.getElementById('followup-list');
+  if(fl){
+    const pending=followups.filter(f=>!f.done);
+    const auto=leads.filter(l=>l.followup&&(l.stage==='contacted'||l.stage==='warm'));
+    if(!pending.length&&!auto.length){
+      fl.innerHTML='<div class="empty"><span class="empty-icon">✅</span>All clear — no pending follow ups.</div>';
+    }else{
+      fl.innerHTML=[
+        ...pending.map(f=>`
+          <div class="fu-item">
+            <div class="fu-icon fu-${f.urgency}">${f.urgency==='urgent'?'🔥':f.urgency==='soon'?'⏰':'📌'}</div>
+            <div style="flex:1">
+              <div class="fu-title">${f.company}</div>
+              <div class="fu-desc">${f.action} — ${f.date}</div>
+            </div>
+            <span class="chip ${f.urgency==='urgent'?'ch-no':f.urgency==='soon'?'ch-medium':'ch-gray'}">${f.urgency==='urgent'?'Today':f.urgency==='soon'?'This week':'Next week'}</span>
+            <button class="done-btn" onclick="markDone(${f.id})">Done</button>
+          </div>`),
+        ...auto.filter(l=>!pending.find(p=>p.company===l.company)).map(l=>`
+          <div class="fu-item">
+            <div class="fu-icon fu-soon">↩️</div>
+            <div style="flex:1">
+              <div class="fu-title">${l.company}</div>
+              <div class="fu-desc">Follow up on outreach — stage: ${stageLabel[l.stage]}</div>
+            </div>
+            <span class="chip ch-medium">Pending</span>
+          </div>`)
+      ].join('');
+    }
+  }
+
+  // ── urgency pitches ──
+  const d=now.getDate(),mo=now.getMonth();
+  const urgencies=[];
+  if(d>=12&&d<=15)urgencies.push({t:'EPF Challan Due by 15th',p:'"Miss the EPF deadline? That\'s 12% penal damage charges automatically. Every single one of our 700+ clients has submitted on time, every time."'});
+  if(d>=12&&d<=15)urgencies.push({t:'Professional Tax Due by 15th',p:'"PT late payment attracts 1.25% penalty per month. We handle PT for all our clients without a single delay — because we track it before they think of it."'});
+  if(d>=18&&d<=21)urgencies.push({t:'ESIC Challan Due by 21st',p:`"ESIC filing deadline is in ${21-d} days. Are you confident your submission will process cleanly this month? We guarantee zero rejections."`});
+  if(mo===6&&d>=10&&d<=15)urgencies.push({t:'LWF Contribution — July 15th',p:'"Labour Welfare Fund only comes twice a year — most companies miss it because it falls off the calendar. We never do."'});
+  urgencies.push({t:'New Labour Codes — Salary Restructuring',p:'"Is your salary structure compliant with the New Labour Codes? Companies that delay restructuring face massive backpay liabilities. We are guiding 700+ clients through this right now — let us put your company on the map."'});
+  urgencies.push({t:'POSH Internal Committee Compliance',p:'"Even large companies face legal scrutiny for improper IC formation. Is your Internal Committee properly constituted with a qualified external member? One complaint without a proper IC and the entire company is liable."'});
+  urgencies.push({t:'V-Ensure Pharma — HOT LEAD',p:'"V-Ensure responded positively on recruitment (20-22 pharma recruits needed). Follow up TODAY on recruitment + position Serve HR compliance services as the natural next step. Strike while the iron is hot."'});
+
+  const ub=document.getElementById('urgency-boxes');
+  if(ub)ub.innerHTML=urgencies.map(u=>`
+    <div class="urgency-card">
+      <div class="urgency-title">${u.t}</div>
+      <div class="urgency-pitch">${u.p}</div>
+    </div>`).join('');
+
+  // ── journal history ──
+  const jh=document.getElementById('journal-history');
+  if(jh){
+    if(!journals.length){
+      jh.innerHTML='<div class="empty"><span class="empty-icon">📓</span>No entries yet. Fill in the journal at end of every day.</div>';
+    }else{
+      jh.innerHTML=journals.slice(0,10).map(j=>`
+        <div class="journal-entry">
+          <div class="je-date">${j.date}</div>
+          <div class="je-chips">
+            <span class="chip ch-new">Leads: ${j.leads}</span>
+            <span class="chip ch-gray">Calls: ${j.calls}</span>
+            <span class="chip ch-contacted">Brochures: ${j.brochures}</span>
+            <span class="chip ch-warm">LinkedIn: ${j.linkedin}</span>
+            <span class="chip ch-meeting">Responses: ${j.responses}</span>
+          </div>
+          ${j.note?`<div class="je-note">"${j.note}"</div>`:''}
+        </div>`).join('');
+    }
+  }
+}
+
+render();
+</script>
+</div>
+</body>
+</html>
