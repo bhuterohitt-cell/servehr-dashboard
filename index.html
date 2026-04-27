@@ -426,7 +426,84 @@ body{
   .header-kpis{grid-template-columns:repeat(6,1fr)}
 }
 
-/* ─── PC LAYOUT ─── */
+/* ─── MODAL ─── */
+.modal-overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,0.45);
+  z-index:1000;
+  align-items:center;justify-content:center;
+  padding:16px;
+}
+.modal-overlay.open{display:flex}
+.modal{
+  background:#fff;
+  border-radius:var(--radius-xl);
+  width:100%;max-width:480px;
+  max-height:85vh;overflow-y:auto;
+  box-shadow:var(--elev-3);
+  animation:fadeUp .2s ease;
+}
+.modal-header{
+  background:linear-gradient(135deg,#BF360C,#E64A19);
+  padding:16px 20px;
+  border-radius:var(--radius-xl) var(--radius-xl) 0 0;
+  display:flex;align-items:flex-start;justify-content:space-between;
+}
+.modal-company{
+  font-family:'Syne',sans-serif;
+  font-size:16px;font-weight:800;color:#fff;
+}
+.modal-industry{font-size:11px;color:rgba(255,255,255,.8);margin-top:3px}
+.modal-close{
+  background:rgba(255,255,255,.2);border:none;
+  color:#fff;width:28px;height:28px;
+  border-radius:50%;cursor:pointer;font-size:16px;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;margin-left:12px;
+}
+.modal-body{padding:16px 20px}
+.modal-section{margin-bottom:14px}
+.modal-section-title{
+  font-family:'Syne',sans-serif;
+  font-size:10px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.06em;
+  color:var(--md-on-surface-var);
+  margin-bottom:8px;
+  padding-bottom:4px;
+  border-bottom:1px solid var(--md-outline-variant);
+}
+.modal-row{
+  display:flex;gap:8px;align-items:flex-start;
+  margin-bottom:8px;font-size:12px;
+}
+.modal-row-label{
+  min-width:80px;color:var(--md-on-surface-var);
+  font-weight:600;flex-shrink:0;
+}
+.modal-row-val{
+  color:var(--md-on-surface);
+  word-break:break-all;flex:1;
+}
+.modal-row-val a{color:var(--md-primary);text-decoration:none}
+.modal-actions{
+  display:flex;gap:8px;flex-wrap:wrap;
+  padding:12px 20px 16px;
+  border-top:1px solid var(--md-outline-variant);
+}
+.priority-high{color:#B71C1C;font-weight:700}
+.priority-medium{color:#E65100;font-weight:700}
+.priority-low{color:#2E7D32;font-weight:700}
+.view-btn{
+  padding:5px 10px;font-size:10px;font-weight:700;
+  border:1.5px solid var(--md-outline);
+  border-radius:var(--radius-full);
+  background:transparent;cursor:pointer;
+  color:var(--md-primary);
+  font-family:'Manrope',sans-serif;
+  transition:background .15s;
+  flex-shrink:0;
+}
+.view-btn:hover{background:var(--md-primary-container)}
 .page-wrap{
   max-width:720px;
   margin:0 auto;
@@ -456,9 +533,11 @@ body{
   <div class="header-inner">
     <div class="header-logo">
       <span class="logo-chip">Serve HR · Pre-Sales</span>
+      <span id="sync-status" style="font-size:10px;color:rgba(255,255,255,0.8);font-weight:600;margin-left:auto">⟳ Syncing...</span>
     </div>
     <div class="header-greeting" id="greet-text">Good morning, Rohit!</div>
     <div class="header-date" id="date-line"></div>
+    <div style="font-size:10px;color:rgba(255,255,255,0.6);margin-bottom:10px" id="sync-time"></div>
     <div class="header-kpis">
       <div class="hkpi"><div class="hkpi-val" id="hk-total">16</div><div class="hkpi-label">Total Leads</div></div>
       <div class="hkpi"><div class="hkpi-val" id="hk-warm">1</div><div class="hkpi-label">Warm</div></div>
@@ -738,54 +817,190 @@ body{
 // ─────────────────────────────────────────────────────────────
 //  DATA BOOTSTRAP — pre-populated from sheets
 // ─────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
+//  GOOGLE SHEETS LIVE SYNC
+// ─────────────────────────────────────────────────────────────
+const LEADS_CSV_URL   = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQyDV22YTcp05ZGM0CG2baneFpzmQZZ0CEFqjol3Rys0is_iAC92YfJrbYLriXgJY0I9NZbBvBd2T1_/pub?gid=1605911164&single=true&output=csv';
+const BROCHURE_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQyDV22YTcp05ZGM0CG2baneFpzmQZZ0CEFqjol3Rys0is_iAC92YfJrbYLriXgJY0I9NZbBvBd2T1_/pub?gid=475318992&single=true&output=csv';
+
+function parseCSV(text){
+  const lines = text.trim().split('\n');
+  const headers = lines[0].split(',').map(h=>h.trim().replace(/"/g,''));
+  return lines.slice(1).map(line=>{
+    const vals = [];
+    let cur = '', inQ = false;
+    for(let i=0;i<line.length;i++){
+      const c = line[i];
+      if(c==='"'){inQ=!inQ}
+      else if(c===','&&!inQ){vals.push(cur.trim());cur=''}
+      else{cur+=c}
+    }
+    vals.push(cur.trim());
+    const obj={};
+    headers.forEach((h,i)=>obj[h]=vals[i]||'');
+    return obj;
+  });
+}
+
+function mapStage(status){
+  if(!status) return 'new';
+  const s = status.toLowerCase();
+  if(s.includes('warm')||s.includes('responded')) return 'warm';
+  if(s.includes('meeting')) return 'meeting';
+  if(s.includes('not interested')||s.includes('archive')) return 'no';
+  if(s.includes('not responded')||s.includes('contacted')) return 'contacted';
+  return 'new';
+}
+
+function mapPriority(p){
+  if(!p) return 'Medium';
+  if(p.toLowerCase().includes('high')) return 'High';
+  if(p.toLowerCase().includes('low')) return 'Low';
+  return 'Medium';
+}
+
+function mapBrochStatus(status){
+  if(!status) return 'pending';
+  const s = status.toLowerCase();
+  if(s.includes('responded')) return 'responded';
+  if(s.includes('delivered')) return 'delivered';
+  if(s.includes('dispatched')||s.includes('sent')) return 'sent';
+  if(s.includes('printed')) return 'printed';
+  return 'pending';
+}
+
+async function fetchSheets(){
+  const syncEl = document.getElementById('sync-status');
+  const syncTime = document.getElementById('sync-time');
+  if(syncEl) syncEl.textContent = 'Syncing...';
+
+  try {
+    const [leadsRes, brochRes] = await Promise.all([
+      fetch(LEADS_CSV_URL),
+      fetch(BROCHURE_CSV_URL)
+    ]);
+
+    const leadsText   = await leadsRes.text();
+    const brochText   = await brochRes.text();
+    const leadsRows   = parseCSV(leadsText);
+    const brochRows   = parseCSV(brochText);
+
+    // Find actual data rows — skip header/summary rows by looking for Sr. No.
+    const dataRows = leadsRows.filter(r => {
+      const num = parseInt(r['Sr. No.'] || r[Object.keys(r)[0]]);
+      return !isNaN(num) && num > 0;
+    });
+
+    // Map leads
+    const fetchedLeads = dataRows.map((r,i) => {
+      const keys = Object.keys(r);
+      return {
+        id: parseInt(r['Sr. No.'] || r[keys[0]]) || (i+1),
+        company:    r['Company Name']    || r[keys[1]] || '',
+        location:   r['Location']        || r[keys[2]] || '',
+        industry:   r['Sector']          || r[keys[3]] || '',
+        employees:  r['Employee Count (Est.)'] || r[keys[4]] || '',
+        contact:    r['Contact Name']    || r[keys[6]] || '',
+        position:   r['Contact Position']|| r[keys[7]] || '',
+        email:      r['Contact Email']   || r[keys[8]] || '',
+        phone:      r['Contact Phone']   || r[keys[9]] || '',
+        linkedin:   r['LinkedIn URL']    || r[keys[10]]|| '',
+        source:     (r['Lead Source']||'').includes('Google')?'GD':(r['Lead Source']||'').includes('Apollo')?'AP':'EX',
+        stage:      mapStage(r['Status']||r[keys[12]]||''),
+        priority:   mapPriority(r['Priority']||r[keys[14]]||''),
+        pain:       r['Compliance Pain Point']||r[keys[19]]||'',
+        value:      r['Estimated Compliance Value (Monthly)']||r[keys[20]]||'',
+        nextAction: r['Next Action']     ||r[keys[17]]||'',
+        requirements: r['Requirements'] ||r[keys[13]]||'',
+        followup:   ['contacted','warm'].includes(mapStage(r['Status']||'')),
+      };
+    }).filter(l=>l.company);
+
+    // Map brochures
+    const fetchedBrochures = brochRows.map((r,i)=>({
+      id: parseInt(r['Sr. No.'])||i+1,
+      company:  r['Company']   ||'',
+      location: r['MIDC/Area'] ||'',
+      status:   mapBrochStatus(r['Status']||''),
+      contact:  r['Contact']   ||'',
+      phone:    r['Phone']     ||'',
+      address:  r['Address']   ||'',
+      industry: '',
+    })).filter(b=>b.company);
+
+    if(fetchedLeads.length > 0){
+      leads     = fetchedLeads;
+      brochures = fetchedBrochures;
+      save('shr_leads_v2',   leads);
+      save('shr_brochures_v2', brochures);
+    }
+
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+    if(syncEl)  syncEl.textContent = '● Live';
+    if(syncEl)  syncEl.style.color = '#2E7D32';
+    if(syncTime) syncTime.textContent = 'Last synced ' + timeStr;
+    render();
+
+  } catch(err) {
+    console.warn('Sheet fetch failed, using cached data:', err);
+    if(syncEl) syncEl.textContent = '● Offline';
+    if(syncEl) syncEl.style.color = '#B71C1C';
+    if(syncTime) syncTime.textContent = 'Using cached data';
+    render();
+  }
+}
+
+// Auto refresh every 5 minutes
+setInterval(fetchSheets, 5 * 60 * 1000);
+
 const SEED_LEADS = [
-  {id:1,  company:'Servotech',                         location:'Mumbai',     industry:'Industrial/Engineering',source:'EX',stage:'contacted',followup:true},
-  {id:2,  company:'Amitex Agro Products',              location:'Mumbai',     industry:'Agro/FMCG',           source:'EX',stage:'contacted',followup:true},
-  {id:3,  company:'Teleperformance',                   location:'Haryana',    industry:'BPO/Call Center',     source:'EX',stage:'no',       followup:false},
-  {id:4,  company:'UniAcco (Amit Singh)',               location:'Mumbai',     industry:'EdTech',              source:'EX',stage:'contacted',followup:true},
-  {id:5,  company:'UniAcco (Aditya Jaiswal)',           location:'Mumbai',     industry:'EdTech',              source:'EX',stage:'contacted',followup:true},
-  {id:6,  company:'Tit-Bit Foods India Pvt. Ltd.',     location:'Navi Mumbai',industry:'Food/FMCG',           source:'EX',stage:'contacted',followup:true},
-  {id:7,  company:'Crimson Interactive',               location:'Mumbai',     industry:'EdTech/Publishing',   source:'EX',stage:'contacted',followup:false},
-  {id:8,  company:'Nano-Mag Technologies Pvt. Ltd.',   location:'Mumbai',     industry:'Manufacturing',       source:'EX',stage:'no',       followup:false},
-  {id:9,  company:'Bharat Bijlee Ltd',                 location:'Mumbai',     industry:'Electrical Engineering',source:'EX',stage:'contacted',followup:true},
-  {id:10, company:'V-Ensure Pharma Technologies',      location:'Navi Mumbai',industry:'Pharma',              source:'EX',stage:'warm',     followup:true},
-  {id:11, company:'Gharda Chemicals Ltd',              location:'Dombivli',   industry:'Chemicals',           source:'GD',stage:'new',      followup:false},
-  {id:12, company:'Connectwell Industries',            location:'Dombivli',   industry:'Electrical',          source:'GD',stage:'new',      followup:false},
-  {id:13, company:'Indo Amines Ltd',                   location:'Dombivli',   industry:'Chemicals',           source:'GD',stage:'new',      followup:false},
-  {id:14, company:'Metropolitan Eximchem',             location:'Dombivli',   industry:'Chemicals',           source:'GD',stage:'new',      followup:false},
-  {id:15, company:'Aceto Pharma India',                location:'Dombivli',   industry:'Pharma',              source:'GD',stage:'new',      followup:false},
-  {id:16, company:'Manbro Pharma',                     location:'Dombivli',   industry:'Pharma',              source:'GD',stage:'new',      followup:false},
+  {id:1,  company:'Servotech', location:'Mumbai', industry:'Industrial/Engineering', source:'EX', stage:'contacted', followup:true, priority:'Medium', employees:'20-50', contact:'Murli Lahoti', position:'Director', email:'murli@servotech-india.com', phone:'919892450932', linkedin:'https://www.linkedin.com/in/murli-lahoti-32444435/', pain:'PT (1+ employees)', value:'₹5,000-10,000', nextAction:'Email + Call', requirements:'-'},
+  {id:2,  company:'Amitex Agro Products', location:'Mumbai', industry:'Agro/FMCG', source:'EX', stage:'contacted', followup:true, priority:'Medium', employees:'20-50', contact:'Murli Lahoti', position:'Director', email:'mlahoti@amitexindia.com; hr@amitexindia.com', phone:'919892450932', linkedin:'https://www.linkedin.com/in/murli-lahoti-32444435/', pain:'PT (1+ employees)', value:'₹5,000-10,000', nextAction:'Email + Call', requirements:'-'},
+  {id:3,  company:'Teleperformance', location:'Haryana', industry:'BPO/Call Center', source:'EX', stage:'no', followup:false, priority:'Low', employees:'5000+', contact:'Shruti Mehra', position:'HR Manager', email:'shruti.mehra@teleperformance.com', phone:'-', linkedin:'https://www.linkedin.com/in/shruti-mehra-97799731/', pain:'EPF/ESIC (5000+ employees)', value:'₹2,00,000+', nextAction:'Archive', requirements:'-'},
+  {id:4,  company:'UniAcco/Unischolars', location:'Mumbai', industry:'EdTech/Student Housing', source:'EX', stage:'contacted', followup:true, priority:'Medium', employees:'50-200', contact:'Amit Singh', position:'Founder', email:'amitsingh23@gmail.com', phone:'919819529530', linkedin:'https://www.linkedin.com/in/amituniacco/', pain:'EPF/ESIC (50+ employees)', value:'₹15,000-30,000', nextAction:'Email', requirements:'-'},
+  {id:5,  company:'UniAcco/Unischolars', location:'Mumbai', industry:'EdTech/Student Housing', source:'EX', stage:'contacted', followup:true, priority:'Medium', employees:'50-200', contact:'Aditya Jaiswal', position:'Manager', email:'jaiswaladitya43@gmail.com', phone:'918169946326', linkedin:'https://www.linkedin.com/in/aj0411/', pain:'EPF/ESIC (50+ employees)', value:'₹15,000-30,000', nextAction:'Email', requirements:'-'},
+  {id:6,  company:'Tit-Bit Foods India Pvt. Ltd.', location:'Navi Mumbai', industry:'Food/FMCG', source:'EX', stage:'contacted', followup:true, priority:'Medium', employees:'50-200', contact:'Akanksha Kadam / Vijay Doshi', position:'HR Manager / Director', email:'hr.manager@titbitspices.com; vijay@titbitspices.com', phone:'-', linkedin:'https://www.linkedin.com/in/vijay-doshi-48ba4046/', pain:'EPF/ESIC (50+ employees), POSH', value:'₹15,000-30,000', nextAction:'Email HR + Call Director', requirements:'-'},
+  {id:7,  company:'Crimson Interactive', location:'Mumbai', industry:'EdTech/Publishing', source:'EX', stage:'contacted', followup:false, priority:'Low', employees:'50-200', contact:'Mansi Dave', position:'Manager', email:'-', phone:'-', linkedin:'https://www.linkedin.com/in/mansi-dave-939762aa/', pain:'EPF/ESIC (50+ employees)', value:'₹15,000-30,000', nextAction:'Skip/Research more', requirements:'-'},
+  {id:8,  company:'Nano-Mag Technologies Pvt. Ltd.', location:'Mumbai', industry:'Manufacturing', source:'EX', stage:'no', followup:false, priority:'Low', employees:'20-50', contact:'Dipti Puranik', position:'HR Manager', email:'dipti@nanomagtech.com; diptispuranik@gmail.com', phone:'-', linkedin:'https://www.linkedin.com/in/dipti-puranik-351b84125/', pain:'EPF/ESIC (20+ employees)', value:'₹5,000-10,000', nextAction:'Archive for now', requirements:'-'},
+  {id:9,  company:'Bharat Bijlee Ltd', location:'Mumbai', industry:'Electrical Engineering', source:'EX', stage:'contacted', followup:true, priority:'High', employees:'1000+', contact:'Rohan Karve / Pravin Gharlute', position:'Senior HR / VP HR', email:'rohan.karve@bharatbijlee.com; pgharlute@gmail.com; pravin.gharlute@bijlee.com', phone:'912227637200; 919920376694; 919969475822', linkedin:'https://www.linkedin.com/in/rohankarve/', pain:'EPF/ESIC (1000+ employees), Factories Act', value:'₹1,00,000+', nextAction:'Call VP HR', requirements:'-'},
+  {id:10, company:'V-Ensure Pharma Technologies', location:'Navi Mumbai', industry:'Pharma', source:'EX', stage:'warm', followup:true, priority:'High', employees:'50-200', contact:'Apurva Goje', position:'Sr. Officer HR And Admin', email:'apurva.g@cielhr.com', phone:'918767591024', linkedin:'https://www.linkedin.com/in/apurva-goje-5b8135167/', pain:'EPF/ESIC (50+ employees), Recruitment', value:'₹15,000-30,000', nextAction:'Follow-up call on recruitment + compliance', requirements:'Recruitment Services (20-22 pharma recruits)'},
+  {id:11, company:'Gharda Chemicals Ltd', location:'Dombivli', industry:'Chemicals', source:'GD', stage:'new', followup:false, priority:'High', employees:'1000+', contact:'Milind Bondale / Priyanka Koli', position:'VP HR / Senior HR', email:'milind.bondale@gharda.com; priyanka.koli@gharda.com; hrdom@gharda.com', phone:'0251-2803380; 2803389', linkedin:'-', pain:'EPF/ESIC (1000+ employees), Factories Act', value:'₹1,00,000+', nextAction:'Email VP HR', requirements:'-'},
+  {id:12, company:'Connectwell Industries', location:'Dombivli', industry:'Electrical', source:'GD', stage:'new', followup:false, priority:'High', employees:'200-500', contact:'Vishnu Jadhav / HR Admin', position:'HR Admin', email:'vishnu@connectwell.com; career@connectwell.com; connect@connectwell.com', phone:'+918828005251; +912517120600', linkedin:'-', pain:'EPF/ESIC (200+ employees)', value:'₹40,000-80,000', nextAction:'Email + Call', requirements:'-'},
+  {id:13, company:'Indo Amines Ltd', location:'Dombivli', industry:'Chemicals', source:'GD', stage:'new', followup:false, priority:'High', employees:'501-1000', contact:'Amol Bhopte / Milind Vasishtha', position:'CEO / Contact Person', email:'amolbhopte@indoaminesltd.com; milind@indoaminesltd.com; ehs@indoaminesltd.com', phone:'+917045592703; +919321526095', linkedin:'-', pain:'EPF/ESIC (500+ employees), Factories Act', value:'₹80,000-1,50,000', nextAction:'Email CEO', requirements:'-'},
+  {id:14, company:'Metropolitan Eximchem', location:'Dombivli', industry:'Chemicals', source:'GD', stage:'new', followup:false, priority:'Medium', employees:'100-200', contact:'Rajiv N. Sheth', position:'Manager', email:'mktg@metrosun.com; info@metrosun.com', phone:'+917506257096', linkedin:'-', pain:'EPF/ESIC (100+ employees)', value:'₹25,000-50,000', nextAction:'Email + Call', requirements:'-'},
+  {id:15, company:'Aceto Pharma India', location:'Dombivli', industry:'Pharma', source:'GD', stage:'new', followup:false, priority:'Medium', employees:'50-200', contact:'Pradeep Thakur', position:'Contact Person', email:'pradeepthakur@acetoindia.com; rvenugopal@aceto.com; info@aceto.com', phone:'0251-2870605', linkedin:'-', pain:'EPF/ESIC (50+ employees), POSH', value:'₹15,000-30,000', nextAction:'Email', requirements:'-'},
+  {id:16, company:'Manbro Pharma', location:'Dombivli', industry:'Pharma', source:'GD', stage:'new', followup:false, priority:'Medium', employees:'21-50', contact:'Kamlesh Choudhary', position:'Contact Person', email:'manbropharmapvtltd@yahoo.in; manbropharma@gmail.com', phone:'+918828800347; +917977139036', linkedin:'-', pain:'EPF/ESIC (20+ employees), POSH', value:'₹8,000-15,000', nextAction:'Email', requirements:'-'},
 ];
 
 const SEED_BROCHURES = [
-  {id:1, company:'Gharda Chemicals Ltd',    location:'Dombivli MIDC', status:'pending'},
-  {id:2, company:'Connectwell Industries',  location:'Dombivli MIDC', status:'pending'},
-  {id:3, company:'Indo Amines Ltd',         location:'Dombivli MIDC', status:'pending'},
-  {id:4, company:'Metropolitan Eximchem',   location:'Dombivli MIDC', status:'pending'},
-  {id:5, company:'Aceto Pharma India',      location:'Dombivli MIDC', status:'pending'},
-  {id:6, company:'Manbro Pharma',           location:'Dombivli MIDC', status:'pending'},
+  {id:1, company:'Gharda Chemicals Ltd', location:'Dombivli MIDC', status:'pending', contact:'Milind Bondale', phone:'0251-2803380', address:'B-27-29, Phase I, Dombivli East MIDC 421203'},
+  {id:2, company:'Connectwell Industries', location:'Dombivli MIDC', status:'pending', contact:'Vishnu Jadhav', phone:'+912517120600', address:'Phase II, Dombivli East MIDC 421204'},
+  {id:3, company:'Indo Amines Ltd', location:'Dombivli MIDC', status:'pending', contact:'Amol Bhopte', phone:'+917045592703', address:'Manpada Road, Phase II, Dombivli East 421203'},
+  {id:4, company:'Metropolitan Eximchem', location:'Dombivli MIDC', status:'pending', contact:'Rajiv Sheth', phone:'+917506257096', address:'CFC(B), Phase II, Dombivli East MIDC 421204'},
+  {id:5, company:'Aceto Pharma India', location:'Dombivli MIDC', status:'pending', contact:'Pradeep Thakur', phone:'0251-2870605', address:'W-116/117, Phase II, Dombivli East 421204'},
+  {id:6, company:'Manbro Pharma', location:'Dombivli MIDC', status:'pending', contact:'Kamlesh Choudhary', phone:'+918828800347', address:'W/66, Phase II, MIDC Dombivli 421204'},
 ];
 
 // ─────────────────────────────────────────────────────────────
-//  STORAGE
+//  INIT — load cached data first, then fetch live
 // ─────────────────────────────────────────────────────────────
-function load(key, fallback){
-  try{const v=localStorage.getItem(key);return v?JSON.parse(v):fallback}catch(e){return fallback}
-}
-function save(key,val){try{localStorage.setItem(key,JSON.stringify(val))}catch(e){}}
-
 let leads     = load('shr_leads_v2',     null);
 let brochures = load('shr_brochures_v2', null);
 let followups = load('shr_followups',    []);
 let journals  = load('shr_journals',     []);
 
-// Seed on first run
-if(!leads)     { leads     = SEED_LEADS.map(l=>({...l}));    save('shr_leads_v2',leads); }
-if(!brochures) { brochures = SEED_BROCHURES.map(b=>({...b}));save('shr_brochures_v2',brochures); }
+// Seed on first run only if no cached data
+if(!leads)     { leads     = SEED_LEADS.map(l=>({...l}));     save('shr_leads_v2',leads); }
+if(!brochures) { brochures = SEED_BROCHURES.map(b=>({...b})); save('shr_brochures_v2',brochures); }
 
 let nextLeadId   = leads.reduce((m,l)=>Math.max(m,l.id),0)+1;
 let nextBrochId  = brochures.reduce((m,b)=>Math.max(m,b.id),0)+1;
 let nextFollowId = followups.reduce((m,f)=>Math.max(m,f.id||0),0)+1;
+
+// Show cached data immediately, then fetch live
+render();
+fetchSheets();
 
 // ─────────────────────────────────────────────────────────────
 //  DATE / GREETING
@@ -1001,6 +1216,7 @@ function render(){
           <div class="lead-meta">
             <span class="chip ${stageCls[l.stage]}">${stageLabel[l.stage]}</span>
             <span class="chip ${l.source==='GD'?'ch-gd':'ch-ex'}">${l.source}</span>
+            <button class="view-btn" onclick="openModal(${l.id})">Contact ↗</button>
             <select class="lead-select" onchange="updateStage(${l.id},this.value)">
               ${Object.entries(stageLabel).map(([k,v])=>`<option value="${k}"${l.stage===k?' selected':''}>${v}</option>`).join('')}
             </select>
@@ -1126,7 +1342,104 @@ function render(){
   }
 }
 
-render();
+</script>
+
+<!-- CONTACT MODAL -->
+<div class="modal-overlay" id="contact-modal" onclick="closeModal(event)">
+  <div class="modal" id="modal-content">
+    <div class="modal-header">
+      <div>
+        <div class="modal-company" id="m-company"></div>
+        <div class="modal-industry" id="m-industry"></div>
+      </div>
+      <button class="modal-close" onclick="closeModalDirect()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-section">
+        <div class="modal-section-title">Contact Details</div>
+        <div class="modal-row"><span class="modal-row-label">Name</span><span class="modal-row-val" id="m-contact"></span></div>
+        <div class="modal-row"><span class="modal-row-label">Position</span><span class="modal-row-val" id="m-position"></span></div>
+        <div class="modal-row"><span class="modal-row-label">Email</span><span class="modal-row-val" id="m-email"></span></div>
+        <div class="modal-row"><span class="modal-row-label">Phone</span><span class="modal-row-val" id="m-phone"></span></div>
+        <div class="modal-row"><span class="modal-row-label">LinkedIn</span><span class="modal-row-val" id="m-linkedin"></span></div>
+      </div>
+      <div class="modal-section">
+        <div class="modal-section-title">Company Info</div>
+        <div class="modal-row"><span class="modal-row-label">Location</span><span class="modal-row-val" id="m-location"></span></div>
+        <div class="modal-row"><span class="modal-row-label">Employees</span><span class="modal-row-val" id="m-employees"></span></div>
+        <div class="modal-row"><span class="modal-row-label">Priority</span><span class="modal-row-val" id="m-priority"></span></div>
+        <div class="modal-row"><span class="modal-row-label">Est. Value</span><span class="modal-row-val" id="m-value"></span></div>
+      </div>
+      <div class="modal-section">
+        <div class="modal-section-title">Sales Info</div>
+        <div class="modal-row"><span class="modal-row-label">Pain Point</span><span class="modal-row-val" id="m-pain"></span></div>
+        <div class="modal-row"><span class="modal-row-label">Next Action</span><span class="modal-row-val" id="m-nextaction"></span></div>
+        <div class="modal-row"><span class="modal-row-label">Requirements</span><span class="modal-row-val" id="m-requirements"></span></div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="m3-btn" style="font-size:11px;padding:8px 14px" onclick="copyEmail()">Copy Email</button>
+      <button class="m3-btn m3-btn-tonal" style="font-size:11px;padding:8px 14px" onclick="copyPhone()">Copy Phone</button>
+      <button class="m3-btn m3-btn-tonal" style="font-size:11px;padding:8px 14px" onclick="openLinkedIn()">Open LinkedIn</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────
+//  MODAL
+// ─────────────────────────────────────────────────────────────
+let currentLead = null;
+
+function openModal(id){
+  const l = leads.find(x=>x.id===id);
+  if(!l) return;
+  currentLead = l;
+  document.getElementById('m-company').textContent = l.company;
+  document.getElementById('m-industry').textContent = l.industry + ' · ' + l.location;
+  document.getElementById('m-contact').textContent = l.contact || '—';
+  document.getElementById('m-position').textContent = l.position || '—';
+  document.getElementById('m-email').textContent = l.email || '—';
+  document.getElementById('m-phone').textContent = l.phone || '—';
+  const li = document.getElementById('m-linkedin');
+  if(l.linkedin && l.linkedin !== '-'){
+    li.innerHTML = `<a href="${l.linkedin}" target="_blank">View Profile →</a>`;
+  } else { li.textContent = '—'; }
+  document.getElementById('m-location').textContent = l.location || '—';
+  document.getElementById('m-employees').textContent = l.employees || '—';
+  const pEl = document.getElementById('m-priority');
+  pEl.textContent = l.priority || '—';
+  pEl.className = 'modal-row-val priority-' + (l.priority||'').toLowerCase();
+  document.getElementById('m-value').textContent = l.value || '—';
+  document.getElementById('m-pain').textContent = l.pain || '—';
+  document.getElementById('m-nextaction').textContent = l.nextAction || '—';
+  document.getElementById('m-requirements').textContent = l.requirements && l.requirements !== '-' ? l.requirements : '—';
+  document.getElementById('contact-modal').classList.add('open');
+}
+
+function closeModal(e){
+  if(e.target === document.getElementById('contact-modal'))
+    document.getElementById('contact-modal').classList.remove('open');
+}
+function closeModalDirect(){
+  document.getElementById('contact-modal').classList.remove('open');
+}
+function copyEmail(){
+  if(currentLead?.email && currentLead.email !== '-'){
+    navigator.clipboard.writeText(currentLead.email.split(';')[0].trim());
+    alert('Email copied!');
+  }
+}
+function copyPhone(){
+  if(currentLead?.phone && currentLead.phone !== '-'){
+    navigator.clipboard.writeText(currentLead.phone.split(';')[0].trim());
+    alert('Phone copied!');
+  }
+}
+function openLinkedIn(){
+  if(currentLead?.linkedin && currentLead.linkedin !== '-')
+    window.open(currentLead.linkedin,'_blank');
+}
 </script>
 </div>
 </body>
