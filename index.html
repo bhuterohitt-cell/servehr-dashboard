@@ -257,7 +257,7 @@
       <div class="stat-card purple">
         <div class="label">High Priority</div>
         <div class="value" id="ov-priority">1</div>
-        <div class="sub">Bharat Bijlee</div>
+        <div class="sub">Monedo, Bharat Bijlee +</div>
       </div>
       <div class="stat-card">
         <div class="label">Brochures Sent</div>
@@ -461,6 +461,23 @@
 // ── DATA ──────────────────────────────────────────────────────
 const LEADS_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQyDV22YTcp05ZGM0CG2baneFpzmQZZ0CEFqjol3Rys0is_iAC92YfJrbYLriXgJY0I9NZbBvBd2T1_/pub?gid=1605911164&single=true&output=csv';
 const BROCHURE_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQyDV22YTcp05ZGM0CG2baneFpzmQZZ0CEFqjol3Rys0is_iAC92YfJrbYLriXgJY0I9NZbBvBd2T1_/pub?gid=475318992&single=true&output=csv';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby89w-yVsIoJcgwPv3gwyjKZMBkISZUJOVjzZnT93mIkS-FnG5d0LgFqjyxF4vYLj5NPA/exec';
+
+// Write to Google Sheet via Apps Script
+async function writeToSheet(payload) {
+  try {
+    await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    return true;
+  } catch(e) {
+    console.error('[ServeHR] Sheet write failed:', e);
+    return false;
+  }
+}
 
 let leadsData = [
   { company:'Servotech', contact:'Murli Lahoti', position:'Director', email:'murli@servotech-india.com', phone:'919892450932', stage:'contacted', priority:false, source:'Existing Lead', industry:'Industrial/Engineering', location:'Mumbai', notes:'Email + Call' },
@@ -480,6 +497,7 @@ let leadsData = [
   { company:'Aceto Pharma India', contact:'Pradeep Thakur', position:'Managing Director', email:'pradeepthakur@acetoindia.com; info@aceto.com', phone:'0251-2870605', stage:'new', priority:false, source:'Google Dork Research', industry:'Pharma', location:'Dombivli', notes:'Email — EPF/ESIC, POSH' },
   { company:'Manbro Pharma', contact:'Pravin Choudhary', position:'Operation Head', email:'manbropharmapvtltd@yahoo.in; manbropharma@gmail.com', phone:'917977139036', stage:'new', priority:false, source:'Google Dork Research', industry:'Pharma', location:'Dombivli', notes:'Email — EPF/ESIC, POSH' },
   { company:'Maha Technocrats Engineering Pvt Ltd', contact:'Sandeep Pandey', position:'Director', email:'sandeep@mahatechnocrats.com', phone:'917738360594', stage:'new', priority:false, source:'Google Dork Research', industry:'Manufacturing', location:'Ambernath', notes:'Email + Call' },
+  { company:'Monedo Financial Services', contact:'Sumita Almeida', position:'VP & Chief HR Officer', email:'', phone:'', stage:'hot', priority:true, source:'Apollo', industry:'NBFC/Financial Services', location:'Andheri East, Mumbai', notes:'MEETING SCHEDULED with Gaurav Lamba (Director). Apollo email → responded → call → meeting. Pain: ESIC confusion. Pitched full compliance retainer (EPF, ESIC, PT, LWF, POSH). ~50 employees. Post-meeting: check with Gaurav, update stage, send proposal.' },
 ];
 
 const brochureData = {
@@ -764,11 +782,11 @@ function countBrochuresSent() {
 
 // ── LEADS ─────────────────────────────────────────────────────
 function stageClass(s) {
-  const map = {new:'badge-new',contacted:'badge-contacted',warm:'badge-warm',hot:'badge-hot',closed:'badge-closed',not_interested:'badge-notint'};
+  const map = {new:'badge-new',contacted:'badge-contacted',warm:'badge-warm',hot:'badge-hot',closed:'badge-closed',not_interested:'badge-notint',meeting:'badge-hot'};
   return map[s]||'badge-new';
 }
 function stageLabel(s) {
-  const map = {new:'New',contacted:'Contacted',warm:'Warm',hot:'Hot',closed:'Closed',not_interested:'Not Interested'};
+  const map = {new:'New',contacted:'Contacted',warm:'Warm',hot:'Meeting Scheduled',closed:'Closed',not_interested:'Not Interested',meeting:'Meeting Scheduled'};
   return map[s]||s;
 }
 
@@ -787,7 +805,7 @@ function renderLeads() {
         <option value="new" ${l.stage==='new'?'selected':''}>New</option>
         <option value="contacted" ${l.stage==='contacted'?'selected':''}>Contacted</option>
         <option value="warm" ${l.stage==='warm'?'selected':''}>Warm</option>
-        <option value="hot" ${l.stage==='hot'?'selected':''}>Hot</option>
+        <option value="hot" ${l.stage==='hot'?'selected':''}>Meeting Scheduled</option>
         <option value="not_interested" ${l.stage==='not_interested'?'selected':''}>Not Interested</option>
         <option value="closed" ${l.stage==='closed'?'selected':''}>Closed</option>
       </select></td>
@@ -797,10 +815,39 @@ function renderLeads() {
 }
 
 function updateStage(i, val) {
-  leadsData[i].stage = val;
+  const lead = leadsData[i];
+  lead.stage = val;
   leadStages[i] = val;
   localStorage.setItem('leadStages', JSON.stringify(leadStages));
-  showToast('Stage updated: '+leadsData[i].company);
+
+  // Map internal stage key back to sheet Status values
+  const stageToStatus = {
+    new: 'New Lead',
+    contacted: 'Not Responded',
+    warm: 'Responded',
+    hot: 'Hot',
+    not_interested: 'Not Interested',
+    closed: 'Closed'
+  };
+
+  const today = new Date().toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'});
+
+  showToast('Saving to Google Sheet...');
+  writeToSheet({
+    company: lead.company,
+    status: stageToStatus[val] || val,
+    lastContact: today
+  }).then(ok => {
+    showToast(ok ? 'Sheet updated: ' + lead.company : 'Saved locally (sheet offline)');
+  });
+
+  // Re-render current view
+  const activePanel = document.querySelector('.panel.active');
+  if(activePanel) {
+    const id = activePanel.id.replace('panel-','');
+    const renderMap = {overview:renderOverview, leads:renderLeads, followups:renderFollowUps};
+    if(renderMap[id]) renderMap[id]();
+  }
 }
 
 // ── BROCHURE ──────────────────────────────────────────────────
@@ -833,7 +880,17 @@ function toggleSent(zone, i) {
   localStorage.setItem('broSent', JSON.stringify(broSent));
   renderBrochure();
   renderOverview();
-  showToast(brochureData[zone][i].company+': '+(brochureData[zone][i].sent?'Marked sent':'Unmarked'));
+  const co = brochureData[zone][i];
+  const today = new Date().toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'});
+  showToast('Saving to Google Sheet...');
+  writeToSheet({
+    company: co.company,
+    sheetName: 'Brochure Tracker',
+    status: co.sent ? 'Sent' : 'Pending',
+    lastContact: co.sent ? today : ''
+  }).then(ok => {
+    showToast(co.company + ': ' + (co.sent ? 'Marked Sent' : 'Unmarked') + (ok ? ' ✔' : ' (local only)'));
+  });
 }
 
 // ── ANALYTICS ─────────────────────────────────────────────────
@@ -987,7 +1044,23 @@ function saveJournal() {
   };
   journalEntries.push(entry);
   localStorage.setItem('journal', JSON.stringify(journalEntries));
-  showToast('Journal entry saved!');
+
+  // Write journal entry to Google Sheet
+  showToast('Saving journal to Google Sheet...');
+  writeToSheet({
+    sheetName: 'Journal',
+    journalEntry: true,
+    date: entry.date,
+    leads: entry.leads,
+    calls: entry.calls,
+    brochures: entry.brochures,
+    linkedin: entry.linkedin,
+    responses: entry.responses,
+    notes: entry.notes
+  }).then(ok => {
+    showToast(ok ? 'Journal saved to sheet!' : 'Journal saved locally only');
+  });
+
   ['j-leads','j-calls','j-brochures','j-linkedin','j-responses'].forEach(id=>document.getElementById(id).value=0);
   document.getElementById('j-notes').value='';
   renderJournal();
