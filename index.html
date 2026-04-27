@@ -463,22 +463,23 @@ const LEADS_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQyDV22YTcp05
 const BROCHURE_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQyDV22YTcp05ZGM0CG2baneFpzmQZZ0CEFqjol3Rys0is_iAC92YfJrbYLriXgJY0I9NZbBvBd2T1_/pub?gid=475318992&single=true&output=csv';
 
 let leadsData = [
-  { company:'Servotech', contact:'Murli Lahoti', position:'Director', email:'murli@servotech-india.com', phone:'', stage:'contacted', priority:false, source:'Apollo', industry:'Manufacturing', notes:'' },
-  { company:'Amitex Agro Products', contact:'Murli Lahoti', position:'Director', email:'mlahoti@amitexindia.com; hr@amitexindia.com', phone:'+919892450932', stage:'contacted', priority:false, source:'Apollo', industry:'Manufacturing', notes:'' },
-  { company:'Teleperformance', contact:'Shruti Mehra', position:'HR Manager', email:'shruti.mehra@teleperformance.com', phone:'', stage:'not_interested', priority:false, source:'Apollo', industry:'BPO', notes:'Not interested' },
-  { company:'UniAcco/Unischolars', contact:'Amit Singh', position:'Founder', email:'amitsingh23@gmail.com', phone:'+919819529530', stage:'contacted', priority:false, source:'LinkedIn', industry:'Education', notes:'' },
-  { company:'UniAcco/Unischolars', contact:'Aditya Jaiswal', position:'Manager', email:'jaiswaladitya43@gmail.com', phone:'+918169946326', stage:'contacted', priority:false, source:'LinkedIn', industry:'Education', notes:'' },
-  { company:'Tit-Bit Foods India', contact:'Akanksha Kadam', position:'HR Manager', email:'hr.manager@titbitspices.com', phone:'', stage:'contacted', priority:false, source:'Apollo', industry:'FMCG', notes:'' },
-  { company:'Crimson Interactive', contact:'Mansi Dave', position:'Manager', email:'—', phone:'', stage:'contacted', priority:false, source:'LinkedIn', industry:'IT', notes:'No email found' },
-  { company:'Nano-Mag Technologies', contact:'Dipti Puranik', position:'HR', email:'dipti@nanomagtech.com', phone:'', stage:'not_interested', priority:false, source:'Apollo', industry:'Manufacturing', notes:'Not interested' },
-  { company:'Bharat Bijlee', contact:'Rohan Karve / Pravin Gharlute', position:'Senior HR / VP HR', email:'rohan.karve@bharatbijlee.com; pgharlute@gmail.com', phone:'', stage:'contacted', priority:true, source:'Apollo', industry:'Manufacturing', notes:'HIGH PRIORITY — VP HR contact secured' },
-  { company:'V-Ensure Pharma', contact:'Apurva Goje', position:'Sr. Officer HR', email:'apurva.g@cielhr.com', phone:'+918767591024', stage:'warm', priority:true, source:'Apollo', industry:'Pharma', notes:'WARM — responded, needs 20-22 pharma recruits' },
-  { company:'Gharda Chemicals', contact:'Milind Bondale', position:'VP HR', email:'milind.bondale@gharda.com', phone:'0251-2803380', stage:'new', priority:false, source:'Research', industry:'Chemicals', notes:'' },
-  { company:'Connectwell Industries', contact:'Vishnu Jadhav', position:'HR', email:'vishnu@connectwell.com', phone:'+912517120600', stage:'new', priority:false, source:'Research', industry:'Manufacturing', notes:'' },
-  { company:'Indo Amines Ltd', contact:'Amol Bhopte', position:'CEO', email:'amolbhopte@indoaminesltd.com', phone:'+917045592703', stage:'new', priority:false, source:'Research', industry:'Chemicals', notes:'' },
-  { company:'Metropolitan Eximchem', contact:'Rajiv Sheth', position:'Manager', email:'mktg@metrosun.com', phone:'+917506257096', stage:'new', priority:false, source:'Research', industry:'Chemicals', notes:'' },
-  { company:'Aceto Pharma India', contact:'Pradeep Thakur', position:'', email:'pradeepthakur@acetoindia.com', phone:'0251-2870605', stage:'new', priority:false, source:'Research', industry:'Pharma', notes:'' },
-  { company:'Manbro Pharma', contact:'Kamlesh Choudhary', position:'', email:'manbropharmapvtltd@yahoo.in', phone:'+918828800347', stage:'new', priority:false, source:'Research', industry:'Pharma', notes:'' },
+  { company:'Servotech', contact:'Murli Lahoti', position:'Director', email:'murli@servotech-india.com', phone:'919892450932', stage:'contacted', priority:false, source:'Existing Lead', industry:'Industrial/Engineering', location:'Mumbai', notes:'Email + Call' },
+  { company:'Amitex Agro Products', contact:'Murli Lahoti', position:'Director', email:'mlahoti@amitexindia.com; hr@amitexindia.com', phone:'919892450932', stage:'contacted', priority:false, source:'Existing Lead', industry:'Agro/FMCG', location:'Mumbai', notes:'Email + Call' },
+  { company:'Teleperformance', contact:'Shruti Mehra', position:'Human Resource Manager', email:'shruti.mehra@teleperformance.com; mehrashruti@gmail.com', phone:'', stage:'not_interested', priority:false, source:'Existing Lead', industry:'BPO/Call Center', location:'Haryana', notes:'Archive' },
+  { company:'UniAcco/Unischolars', contact:'Amit Singh', position:'Founder', email:'amitsingh23@gmail.com', phone:'919819529530', stage:'contacted', priority:false, source:'Existing Lead', industry:'EdTech/Student Housing', location:'Mumbai', notes:'Email' },
+  { company:'UniAcco/Unischolars', contact:'Aditya Jaiswal', position:'Manager', email:'jaiswaladitya43@gmail.com', phone:'918169946326', stage:'contacted', priority:false, source:'Existing Lead', industry:'EdTech/Student Housing', location:'Mumbai', notes:'Email' },
+  { company:'Tit-Bit Foods India Pvt. Ltd.', contact:'Akanksha Kadam / Vijay Doshi', position:'HR Manager / Director', email:'hr.manager@titbitspices.com; vijay@titbitspices.com', phone:'', stage:'contacted', priority:false, source:'Existing Lead', industry:'Food/FMCG Manufacturing', location:'Navi Mumbai', notes:'Email HR + Call Director' },
+  { company:'Crimson Interactive', contact:'Mansi Dave', position:'Manager', email:'', phone:'', stage:'contacted', priority:false, source:'Existing Lead', industry:'EdTech/Publishing', location:'Mumbai', notes:'Skip/Research more' },
+  { company:'Nano-Mag Technologies Pvt. Ltd', contact:'Dipti Puranik', position:'HR Manager', email:'dipti@nanomagtech.com; diptispuranik@gmail.com', phone:'', stage:'not_interested', priority:false, source:'Existing Lead', industry:'Manufacturing', location:'Mumbai', notes:'Archive for now' },
+  { company:'Bharat Bijlee Ltd', contact:'Rohan Karve / Pravin Gharlute', position:'Senior HR / VP HR', email:'rohan.karve@bharatbijlee.com; pgharlute@gmail.com; pravin.gharlute@bijlee.com', phone:'912227637200; 919920376694', stage:'contacted', priority:true, source:'Existing Lead', industry:'Electrical Engineering', location:'Mumbai', notes:'Call VP HR — EPF/ESIC 1000+ employees, Factories Act' },
+  { company:'V-Ensure Pharma Technologies Pvt Ltd', contact:'Apurva Goje', position:'Sr. Officer HR And Admin', email:'apurva.g@cielhr.com', phone:'918767591024', stage:'warm', priority:true, source:'Existing Lead', industry:'Pharma', location:'Navi Mumbai', notes:'Responded 24-Apr-2026 — needs 20-22 pharma recruits. Follow-up call on recruitment + compliance.' },
+  { company:'Gharda Chemicals Ltd', contact:'Milind Bondale / Priyanka Koli', position:'VP HR / Senior HR', email:'milind.bondale@gharda.com; priyanka.koli@gharda.com; hrdom@gharda.com', phone:'0251-2803380', stage:'new', priority:true, source:'Google Dork Research', industry:'Chemicals', location:'Dombivli', notes:'Email VP HR — EPF/ESIC 1000+ employees, Factories Act' },
+  { company:'Connectwell Industries', contact:'Vishnu Jadhav', position:'HR Admin', email:'vishnu@connectwell.com; career@connectwell.com', phone:'+918828005251; +912517120600', stage:'new', priority:true, source:'Google Dork Research', industry:'Electrical', location:'Dombivli', notes:'Email + Call' },
+  { company:'Indo Amines Ltd', contact:'Amol Bhopte / Milind Vasishtha', position:'CEO / Contact Person', email:'amolbhopte@indoaminesltd.com; milind@indoaminesltd.com', phone:'+917045592703; +919321526095', stage:'new', priority:true, source:'Google Dork Research', industry:'Chemicals', location:'Dombivli', notes:'Email CEO — EPF/ESIC 500+ employees, Factories Act' },
+  { company:'Metropolitan Eximchem', contact:'Rajiv N. Sheth', position:'Manager', email:'mktg@metrosun.com; info@metrosun.com', phone:'+917506257096', stage:'new', priority:false, source:'Google Dork Research', industry:'Chemicals', location:'Dombivli', notes:'Email + Call' },
+  { company:'Aceto Pharma India', contact:'Pradeep Thakur', position:'Managing Director', email:'pradeepthakur@acetoindia.com; info@aceto.com', phone:'0251-2870605', stage:'new', priority:false, source:'Google Dork Research', industry:'Pharma', location:'Dombivli', notes:'Email — EPF/ESIC, POSH' },
+  { company:'Manbro Pharma', contact:'Pravin Choudhary', position:'Operation Head', email:'manbropharmapvtltd@yahoo.in; manbropharma@gmail.com', phone:'917977139036', stage:'new', priority:false, source:'Google Dork Research', industry:'Pharma', location:'Dombivli', notes:'Email — EPF/ESIC, POSH' },
+  { company:'Maha Technocrats Engineering Pvt Ltd', contact:'Sandeep Pandey', position:'Director', email:'sandeep@mahatechnocrats.com', phone:'917738360594', stage:'new', priority:false, source:'Google Dork Research', industry:'Manufacturing', location:'Ambernath', notes:'Email + Call' },
 ];
 
 const brochureData = {
@@ -586,60 +587,89 @@ function parseCSVRow(row) {
 function parseLeeadsCSV(csv) {
   const lines = csv.trim().split('\n');
   if(lines.length < 2) return;
-  const rawHeaders = parseCSVRow(lines[0]);
-  const headers = rawHeaders.map(h => h.toLowerCase().replace(/[^a-z0-9]/g,' ').trim());
-  console.log('[ServeHR] CSV headers detected:', rawHeaders);
 
-  // Fuzzy column finder — matches any header containing any of the keywords
-  function col(obj, ...keywords) {
+  // Find the actual header row — skip summary/title rows at the top
+  // (Rohit's sheet has 2 title rows before the real headers)
+  let headerRowIdx = -1;
+  for(let i=0;i<Math.min(6,lines.length);i++) {
+    const row = parseCSVRow(lines[i]).map(c=>c.toLowerCase());
+    // Real header row will contain 'company' or 'company name'
+    if(row.some(c=>c.includes('company'))) { headerRowIdx = i; break; }
+  }
+  if(headerRowIdx < 0) { console.warn('[ServeHR] Could not find header row in CSV'); return; }
+
+  const rawHeaders = parseCSVRow(lines[headerRowIdx]);
+  const headers = rawHeaders.map(h => h.toLowerCase().trim());
+  console.log('[ServeHR] Headers at row', headerRowIdx, ':', headers);
+
+  // Find column indices by partial match — handles "Company Name", "Contact Email", etc.
+  function findCol(headers, ...keywords) {
     for(const kw of keywords) {
-      for(const h of Object.keys(obj)) {
-        if(h.includes(kw)) return obj[h];
-      }
+      const idx = headers.findIndex(h => h.includes(kw));
+      if(idx >= 0) return idx;
     }
-    return '';
+    return -1;
   }
 
+  const iCompany  = findCol(headers, 'company name', 'company');
+  const iContact  = findCol(headers, 'contact name', 'contact person', 'contact');
+  const iPosition = findCol(headers, 'contact position', 'position', 'title', 'role', 'designation');
+  const iEmail    = findCol(headers, 'contact email', 'email');
+  const iPhone    = findCol(headers, 'contact phone', 'phone', 'mobile', 'number');
+  const iStatus   = findCol(headers, 'status', 'stage', 'pipeline');
+  const iPriority = findCol(headers, 'priority');
+  const iSource   = findCol(headers, 'lead source', 'source', 'channel');
+  const iSector   = findCol(headers, 'sector', 'industry', 'vertical');
+  const iNotes    = findCol(headers, 'requirements', 'notes', 'remarks', 'next action');
+  const iLocation = findCol(headers, 'location', 'city', 'area');
+
+  console.log('[ServeHR] Column map — company:', iCompany, 'contact:', iContact, 'status:', iStatus, 'priority:', iPriority);
+
+  const get = (cols, idx) => idx >= 0 ? (cols[idx]||'').trim() : '';
+
   const parsed = [];
-  for(let i=1;i<lines.length;i++) {
+  for(let i=headerRowIdx+1; i<lines.length; i++) {
     const cols = parseCSVRow(lines[i]);
-    if(!cols.some(c=>c.trim())) continue; // skip fully empty rows
-    const obj = {};
-    headers.forEach((h,j) => obj[h] = (cols[j]||'').trim());
+    if(!cols.some(c=>c.trim())) continue; // skip blank rows
 
-    const company = col(obj,'company','organisation','organization','firm','client','name');
-    if(!company) continue; // skip rows with no company
+    const company = get(cols, iCompany);
+    if(!company || company.toLowerCase()==='company name') continue;
 
-    const stageRaw = col(obj,'stage','status','pipeline','state').toLowerCase();
-    // normalise stage values from sheet to our internal keys
+    // Normalise status → internal stage key
+    const statusRaw = get(cols, iStatus).toLowerCase();
     let stage = 'new';
-    if(stageRaw.includes('warm')) stage='warm';
-    else if(stageRaw.includes('hot')) stage='hot';
-    else if(stageRaw.includes('contact')) stage='contacted';
-    else if(stageRaw.includes('close')||stageRaw.includes('won')) stage='closed';
-    else if(stageRaw.includes('not')||stageRaw.includes('interest')||stageRaw.includes('loss')) stage='not_interested';
-    else if(stageRaw.includes('new')||stageRaw==='') stage='new';
+    if(statusRaw.includes('responded') && !statusRaw.includes('not')) stage='warm';
+    else if(statusRaw.includes('warm')) stage='warm';
+    else if(statusRaw.includes('hot')) stage='hot';
+    else if(statusRaw.includes('not interested')) stage='not_interested';
+    else if(statusRaw.includes('not responded') || statusRaw.includes('no response')) stage='contacted';
+    else if(statusRaw.includes('contacted')) stage='contacted';
+    else if(statusRaw.includes('closed') || statusRaw.includes('won')) stage='closed';
+    else if(statusRaw.includes('new')) stage='new';
+    else if(statusRaw==='') stage='new';
 
-    const priorityRaw = col(obj,'priority','urgent','high').toLowerCase();
-    const priority = priorityRaw==='yes'||priorityRaw==='true'||priorityRaw==='1'||priorityRaw==='high';
+    // Normalise priority
+    const priorityRaw = get(cols, iPriority).toLowerCase();
+    const priority = priorityRaw==='high';
 
     parsed.push({
       company,
-      contact: col(obj,'contact','person','name','poc'),
-      position: col(obj,'position','title','role','designation','job'),
-      email: col(obj,'email','mail'),
-      phone: col(obj,'phone','mobile','number','tel','contact no'),
+      contact:  get(cols, iContact),
+      position: get(cols, iPosition),
+      email:    get(cols, iEmail),
+      phone:    get(cols, iPhone),
       stage,
       priority,
-      source: col(obj,'source','channel','medium','from'),
-      industry: col(obj,'industry','sector','vertical','type'),
-      notes: col(obj,'note','remark','comment','detail','info')
+      source:   get(cols, iSource),
+      industry: get(cols, iSector),
+      location: get(cols, iLocation),
+      notes:    get(cols, iNotes),
     });
   }
 
-  console.log('[ServeHR] Parsed', parsed.length, 'leads from CSV. First row:', parsed[0]);
+  console.log('[ServeHR] Parsed', parsed.length, 'leads. Sample:', parsed[0]);
 
-  if(parsed.length>0) {
+  if(parsed.length > 0) {
     leadsData = parsed;
     leadStages = {};
     localStorage.removeItem('leadStages');
