@@ -560,7 +560,12 @@ async function fetchLiveData() {
     badge.className = 'sync-badge live';
     const now = new Date();
     syncText.textContent = 'Live · ' + now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
-    renderOverview();
+    const activePanel = document.querySelector('.panel.active');
+    if(activePanel) {
+      const id = activePanel.id.replace('panel-','');
+      const renderMap = {overview:renderOverview,leads:renderLeads,brochure:renderBrochure,analytics:renderAnalytics,followups:renderFollowUps,pitch:renderPitch,journal:renderJournal};
+      if(renderMap[id]) renderMap[id]();
+    } else { renderOverview(); }
   } catch(e) {
     badge.className = 'sync-badge offline';
     syncText.textContent = 'Offline · cached';
@@ -581,26 +586,59 @@ function parseCSVRow(row) {
 function parseLeeadsCSV(csv) {
   const lines = csv.trim().split('\n');
   if(lines.length < 2) return;
-  const headers = parseCSVRow(lines[0]).map(h => h.toLowerCase().trim());
+  const rawHeaders = parseCSVRow(lines[0]);
+  const headers = rawHeaders.map(h => h.toLowerCase().replace(/[^a-z0-9]/g,' ').trim());
+  console.log('[ServeHR] CSV headers detected:', rawHeaders);
+
+  // Fuzzy column finder — matches any header containing any of the keywords
+  function col(obj, ...keywords) {
+    for(const kw of keywords) {
+      for(const h of Object.keys(obj)) {
+        if(h.includes(kw)) return obj[h];
+      }
+    }
+    return '';
+  }
+
   const parsed = [];
   for(let i=1;i<lines.length;i++) {
     const cols = parseCSVRow(lines[i]);
-    if(!cols[0]) continue;
+    if(!cols.some(c=>c.trim())) continue; // skip fully empty rows
     const obj = {};
-    headers.forEach((h,j) => obj[h] = cols[j]||'');
+    headers.forEach((h,j) => obj[h] = (cols[j]||'').trim());
+
+    const company = col(obj,'company','organisation','organization','firm','client','name');
+    if(!company) continue; // skip rows with no company
+
+    const stageRaw = col(obj,'stage','status','pipeline','state').toLowerCase();
+    // normalise stage values from sheet to our internal keys
+    let stage = 'new';
+    if(stageRaw.includes('warm')) stage='warm';
+    else if(stageRaw.includes('hot')) stage='hot';
+    else if(stageRaw.includes('contact')) stage='contacted';
+    else if(stageRaw.includes('close')||stageRaw.includes('won')) stage='closed';
+    else if(stageRaw.includes('not')||stageRaw.includes('interest')||stageRaw.includes('loss')) stage='not_interested';
+    else if(stageRaw.includes('new')||stageRaw==='') stage='new';
+
+    const priorityRaw = col(obj,'priority','urgent','high').toLowerCase();
+    const priority = priorityRaw==='yes'||priorityRaw==='true'||priorityRaw==='1'||priorityRaw==='high';
+
     parsed.push({
-      company: obj['company']||obj['company name']||'',
-      contact: obj['contact']||obj['name']||obj['contact name']||'',
-      position: obj['position']||obj['title']||obj['role']||'',
-      email: obj['email']||'',
-      phone: obj['phone']||obj['mobile']||'',
-      stage: (obj['stage']||obj['status']||'new').toLowerCase(),
-      priority: (obj['priority']||'').toLowerCase()==='true'||(obj['priority']||'').toLowerCase()==='yes',
-      source: obj['source']||'',
-      industry: obj['industry']||'',
-      notes: obj['notes']||obj['remarks']||''
+      company,
+      contact: col(obj,'contact','person','name','poc'),
+      position: col(obj,'position','title','role','designation','job'),
+      email: col(obj,'email','mail'),
+      phone: col(obj,'phone','mobile','number','tel','contact no'),
+      stage,
+      priority,
+      source: col(obj,'source','channel','medium','from'),
+      industry: col(obj,'industry','sector','vertical','type'),
+      notes: col(obj,'note','remark','comment','detail','info')
     });
   }
+
+  console.log('[ServeHR] Parsed', parsed.length, 'leads from CSV. First row:', parsed[0]);
+
   if(parsed.length>0) {
     leadsData = parsed;
     leadStages = {};
