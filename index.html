@@ -1394,7 +1394,7 @@ function renderPitch() {
     .map(d => ({ ...d, days: daysUntil(d.day, d.month) }))
     .sort((a,b)=>a.days-b.days);
 
-  el.innerHTML = sorted.map(d=>{
+  el.innerHTML = sorted.map((d,i)=>{
     const cls = d.days<=0?'urgent':d.days<=5?'urgent':d.days<=10?'upcoming':'future';
     const chipCls = d.days<=5?'days-urgent':d.days<=10?'days-upcoming':'days-future';
     const dayLabel = d.days===0?'TODAY':d.days===1?'TOMORROW':d.days+' days';
