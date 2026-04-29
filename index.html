@@ -976,29 +976,55 @@ function showTabDirect(name) {
 }
 
 // ── CSV FETCH ─────────────────────────────────────────────────
+// JSONP fetch — bypasses CORS entirely, works from any origin including GitHub Pages
+function jsonpFetch(url, callbackName) {
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      delete window[callbackName];
+      const s = document.getElementById('jsonp-' + callbackName);
+      if(s) s.remove();
+      reject(new Error('JSONP timeout'));
+    }, 12000);
+
+    window[callbackName] = function(data) {
+      clearTimeout(timeout);
+      delete window[callbackName];
+      const s = document.getElementById('jsonp-' + callbackName);
+      if(s) s.remove();
+      resolve(data);
+    };
+
+    const script = document.createElement('script');
+    script.id = 'jsonp-' + callbackName;
+    script.src = url + '&callback=' + callbackName + '&r=' + Date.now();
+    script.onerror = () => {
+      clearTimeout(timeout);
+      delete window[callbackName];
+      script.remove();
+      reject(new Error('JSONP script error'));
+    };
+    document.head.appendChild(script);
+  });
+}
+
 async function fetchLiveData() {
   const badge = document.getElementById('sync-badge');
   const syncText = document.getElementById('sync-text');
   syncText.textContent = 'Syncing…';
   badge.className = 'sync-badge';
   try {
-    const opts = { redirect: 'follow' };
-    const [lr, br] = await Promise.all([
-      fetch(LEADS_CSV + '&r=' + Date.now(), opts),
-      fetch(BROCHURE_CSV + '&r=' + Date.now(), opts)
-    ]);
-    if(lr.ok) {
-      const csv = await lr.text();
-      parseLeeadsCSV(csv);
+    // Fetch both sheets via JSONP — Apps Script returns {leads: csvString, brochure: csvString}
+    const data = await jsonpFetch(APPS_SCRIPT_URL + '?action=readAll', 'serveHRCallback');
+    if(data.leads) {
+      console.log('[ServeHR] Leads CSV received, length:', data.leads.length);
+      parseLeeadsCSV(data.leads);
     }
-    if(br.ok) {
-      const csv = await br.text();
-      parseBrochureCSV(csv);
+    if(data.brochure) {
+      parseBrochureCSV(data.brochure);
     }
     badge.className = 'sync-badge live';
     const now = new Date();
     syncText.textContent = 'Live · ' + now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
-    // Always refresh overview stats + kanban, then also refresh active panel
     renderOverview();
     const activePanel = document.querySelector('.panel.active');
     if(activePanel) {
@@ -1010,7 +1036,6 @@ async function fetchLiveData() {
     console.error('[ServeHR] Fetch failed:', e);
     badge.className = 'sync-badge offline';
     syncText.textContent = 'Offline · cached';
-    // Still render with cached/hardcoded data
     renderOverview();
   }
 }
