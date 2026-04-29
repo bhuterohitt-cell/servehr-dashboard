@@ -865,6 +865,32 @@ body { background: var(--bg); color: var(--text); font-family: var(--font); font
 // ── DATA ──────────────────────────────────────────────────────
 // Fetch via Apps Script doGet — bypasses CORS entirely
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby89w-yVsIoJcgwPv3gwyjKZMBkISZUJOVjzZnT93mIkS-FnG5d0LgFqjyxF4vYLj5NPA/exec';
+
+// Embedded seed data — always loads instantly, sync updates on top
+const SEED_CSV = `SERVE HR - LEADS MASTER SHEET,,,,,,,,,,,,,,,,,,,,
+Pre-Sales Executive: Rohit Bhute | Last Updated: 24-Apr-2026 | Total Leads: 16,,,,,,,,,,,,,,,,,,,,
+High Priority:,,5,Medium Priority:,7,Low Priority:,3,Responded:,1,Not Interested:,2,New Leads:,3,Follow-up Due:,12,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+Sr. No.,Priority,Company Name,Location,Sector,Employee Count (Est.),MIDC/Industrial Area,Contact Name,Contact Position,Contact Email,Contact Phone,LinkedIn URL,Lead Source,Status,Requirements,Last Contact Date,Next Action,Compliance Pain Point,Estimated Compliance Value (Monthly),#VALUE!,#VALUE!
+1,Medium,Servotech,Mumbai,Industrial/Engineering,20-50,-,Murli Lahoti,Director,murli@servotech-india.com,919892450932,,Existing Lead,Not Responded,-,-,Email + Call,PT (1+ employees),"5000-10000",-,Yes
+2,Medium,Amitex Agro Products,Mumbai,Agro/FMCG,20-50,-,Murli Lahoti,Director,mlahoti@amitexindia.com; hr@amitexindia.com,919892450932,,Existing Lead,Not Responded,-,-,Email + Call,PT (1+ employees),"5000-10000",-,Yes
+3,Low,Teleperformance,Haryana,BPO/Call Center,5000+,-,Shruti Mehra,Human Resource Manager,shruti.mehra@teleperformance.com,-,,Existing Lead,Not Interested,-,-,Archive,EPF/ESIC,"200000+",-,Yes
+4,Medium,UniAcco/Unischolars,Mumbai,EdTech/Student Housing,50-200,-,Amit Singh,Founder,amitsingh23@gmail.com,919819529530,,Existing Lead,Not Responded,-,-,Email,EPF/ESIC,"15000-30000",-,Yes
+5,Medium,UniAcco/Unischolars,Mumbai,EdTech/Student Housing,50-200,-,Aditya Jaiswal,Manager,jaiswaladitya43@gmail.com,918169946326,,Existing Lead,Not Responded,-,-,Email,EPF/ESIC,"15000-30000",-,Yes
+6,Medium,Tit-Bit Foods India Pvt. Ltd.,Navi Mumbai,Food/FMCG Manufacturing,50-200,-,Akanksha Kadam / Vijay Doshi,HR Manager / Director,hr.manager@titbitspices.com; vijay@titbitspices.com,-,,Existing Lead,Not Responded,-,-,Email HR + Call Director,"EPF/ESIC, POSH","15000-30000",-,Yes
+7,Low,Crimson Interactive,Mumbai,EdTech/Publishing,50-200,-,Mansi Dave,Manager,-,-,,Existing Lead,Not Responded,-,-,Skip/Research more,EPF/ESIC,"15000-30000",-,Yes
+8,Low,Nano-Mag Technologies Pvt. Ltd,Mumbai,Manufacturing,20-50,-,Dipti Puranik,HR Manager,dipti@nanomagtech.com,-,,Existing Lead,Not Interested,-,-,Archive for now,EPF/ESIC,"5000-10000",-,Yes
+9,High,Bharat Bijlee Ltd,Mumbai,Electrical Engineering,1000+,-,Rohan Karve / Pravin Gharlute,Senior HR / VP HR,rohan.karve@bharatbijlee.com; pgharlute@gmail.com,912227637200; 919920376694,,Existing Lead,Not Responded,-,-,Call VP HR,"EPF/ESIC, Factories Act","100000+",-,Yes
+10,High,V-Ensure Pharma Technologies Pvt Ltd,Navi Mumbai,Pharma,50-200,-,Apurva Goje,Sr. Officer HR And Admin,apurva.g@cielhr.com,918767591024,,Existing Lead,Responded,Recruitment Services (20-22 pharma recruits),24-Apr-2026,Follow-up call on recruitment + compliance,"EPF/ESIC, Recruitment","15000-30000",-,No
+11,High,Gharda Chemicals Ltd,Dombivli,Chemicals,1000+,Dombivli MIDC,Milind Bondale / Priyanka Koli,VP - Human Resources / Senior HR,milind.bondale@gharda.com; priyanka.koli@gharda.com,0251-2803380,,Google Dork Research,New Lead,-,-,Email VP HR,"EPF/ESIC, Factories Act","100000+",-,Yes
+12,High,Connectwell Industries,Dombivli,Electrical,200-500,Dombivli MIDC,Vishnu Jadhav,HR Admin,vishnu@connectwell.com; career@connectwell.com,+918828005251,,Google Dork Research,Sent,-,28-Apr-2026,Email + Call,EPF/ESIC,"40000-80000",1,No
+13,High,Indo Amines Ltd,Dombivli,Chemicals,501-1000,Dombivli MIDC,Amol Bhopte / Milind Vasishtha,CEO / Contact Person,amolbhopte@indoaminesltd.com; milind@indoaminesltd.com,+917045592703,,Google Dork Research,New Lead,-,-,Email CEO,"EPF/ESIC, Factories Act","80000-150000",-,Yes
+14,Medium,Metropolitan Eximchem,Dombivli,Chemicals,100-200,Dombivli MIDC,Rajiv N. Sheth,Manager,mktg@metrosun.com,+917506257096,,Google Dork Research,Sent,-,28-Apr-2026,Email + Call,EPF/ESIC,"25000-50000",1,No
+15,Medium,Aceto Pharma India,Dombivli,Pharma,50-200,Dombivli MIDC,Pradeep Thakur,Managing Director,pradeepthakur@acetoindia.com,0251-2870605,,Google Dork Research,New Lead,-,-,Email,"EPF/ESIC, POSH","15000-30000",-,Yes
+16,Medium,Manbro Pharma,Dombivli,Pharma,21-50,Dombivli MIDC,Pravin Choudhary,Operation Head,manbropharmapvtltd@yahoo.in,917977139036,,Google Dork Research,Sent,-,28-Apr-2026,Email,"EPF/ESIC, POSH","8000-15000",1,Yes
+17,,Maha Technocrats Engineering Pvt Ltd,Ambernath,Manufacturing,25-30,Ambernath MIDC,Sandeep Pandey,Director,sandeep@mahatechnocrats.com,917738360594,,Google Dork Research,New Lead,-,-,Email + Call,,,-,
+18,,Derby Suncrest Food Makers,Ambernath,Food,,,,,,,,,,New Lead,,29-Apr-2026,,,,,
+19,High,Monedo Financial Services,Mumbai,Finance,50,VKG Corporate Centre Andheri,Sumita Almeida,VP Chief HR Officer,sumita.almeida@monedo.in,919819626832,,Apollo,Quotation,Payroll Compliances,29-Apr-2026,Payment Confirmation,Comprehensive Payroll Compliances,4000,0,Yes`;
 const LEADS_CSV    = APPS_SCRIPT_URL + '?sheet=leads';
 const BROCHURE_CSV = APPS_SCRIPT_URL + '?sheet=brochure';
 // Write to Google Sheet via Apps Script
@@ -981,31 +1007,50 @@ async function fetchLiveData() {
   const syncText = document.getElementById('sync-text');
   syncText.textContent = 'Syncing…';
   badge.className = 'sync-badge';
+
+  // Use Apps Script JSONP — injects a <script> tag, bypasses all CORS/CSP restrictions
+  // Apps Script must return: callback({leads:'csv...', brochure:'csv...'})
   try {
-    const res = await fetch(APPS_SCRIPT_URL + '?action=readAll&r=' + Date.now());
-    const data = await res.json();
+    const data = await new Promise((resolve, reject) => {
+      const cbName = 'serveHR_' + Date.now();
+      const timer = setTimeout(() => {
+        delete window[cbName];
+        el && el.remove();
+        reject(new Error('Timeout'));
+      }, 15000);
+      window[cbName] = (d) => {
+        clearTimeout(timer);
+        delete window[cbName];
+        el && el.remove();
+        resolve(d);
+      };
+      const el = document.createElement('script');
+      el.src = APPS_SCRIPT_URL + '?action=readAll&callback=' + cbName + '&t=' + Date.now();
+      el.onerror = () => { clearTimeout(timer); reject(new Error('Script load error')); };
+      document.head.appendChild(el);
+    });
+
     if(data.leads) {
-      console.log('[ServeHR] Leads received, length:', data.leads.length);
       parseLeeadsCSV(data.leads);
+      console.log('[ServeHR] Synced from sheet —', data.leads.split('\n').length, 'rows');
     }
-    if(data.brochure) {
-      parseBrochureCSV(data.brochure);
-    }
+    if(data.brochure) parseBrochureCSV(data.brochure);
+
     badge.className = 'sync-badge live';
     const now = new Date();
     syncText.textContent = 'Live · ' + now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
-    renderOverview();
-    const activePanel = document.querySelector('.panel.active');
-    if(activePanel) {
-      const id = activePanel.id.replace('panel-','');
-      const renderMap = {leads:renderLeads,brochure:renderBrochure,analytics:renderAnalytics,followups:renderFollowUps,pitch:renderPitch,journal:renderJournal};
-      if(renderMap[id]) renderMap[id]();
-    }
   } catch(e) {
-    console.error('[ServeHR] Fetch failed:', e);
+    console.warn('[ServeHR] Live sync unavailable:', e.message, '— showing embedded data');
     badge.className = 'sync-badge offline';
-    syncText.textContent = 'Offline · cached';
-    renderOverview();
+    syncText.textContent = 'Embedded · ' + new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+  }
+
+  renderOverview();
+  const activePanel = document.querySelector('.panel.active');
+  if(activePanel) {
+    const id = activePanel.id.replace('panel-','');
+    const renderMap = {leads:renderLeads,brochure:renderBrochure,analytics:renderAnalytics,followups:renderFollowUps,pitch:renderPitch,journal:renderJournal};
+    if(renderMap[id]) renderMap[id]();
   }
 }
 
@@ -1656,6 +1701,8 @@ function init() {
   const now = new Date();
   document.getElementById('date-chip').textContent = now.toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'});
   document.getElementById('journal-date').textContent = now.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  // Parse embedded seed data immediately — shows data before any network call
+  parseLeeadsCSV(SEED_CSV);
   renderOverview();
   fetchLiveData();
   setInterval(fetchLiveData, 5*60*1000); // auto refresh every 5 min
