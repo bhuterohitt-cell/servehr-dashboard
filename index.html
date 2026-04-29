@@ -282,6 +282,11 @@ body { background: var(--bg); color: var(--text); font-family: var(--font); font
 .pipeline-card .ct { font-size:10px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .pipeline-card .prio-dot { width:6px; height:6px; border-radius:50%; background:var(--danger); display:inline-block; margin-right:4px; box-shadow:0 0 4px var(--danger); }
 .pipeline-col-bar { height:3px; border-radius:0 0 var(--r) var(--r); }
+.pipeline-card.dragging { opacity:0.4; transform:scale(0.96); cursor:grabbing; }
+.pipeline-card[draggable] { cursor:grab; }
+.pipeline-col.drag-over { border-color:var(--green); background:rgba(198,241,53,0.05); box-shadow:0 0 0 2px rgba(198,241,53,0.3); }
+.pipeline-col.drag-over .pipeline-col-body { background:rgba(198,241,53,0.04); border-radius:0 0 var(--r-sm) var(--r-sm); }
+.pipeline-empty-slot { font-size:10px;color:var(--muted);text-align:center;padding:14px 0;opacity:0.4;border:1px dashed var(--border2);border-radius:var(--r-sm);margin:4px 0; }
 .badge-priority { background: rgba(198,241,53,0.1); color: var(--green); border: 1px solid rgba(198,241,53,0.3); }
 
 /* ── BUTTONS ── */
@@ -858,10 +863,10 @@ body { background: var(--bg); color: var(--text); font-family: var(--font); font
 
 <script>
 // ── DATA ──────────────────────────────────────────────────────
-const LEADS_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQyDV22YTcp05ZGM0CG2baneFpzmQZZ0CEFqjol3Rys0is_iAC92YfJrbYLriXgJY0I9NZbBvBd2T1_/pub?gid=1605911164&single=true&output=csv';
-const BROCHURE_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQyDV22YTcp05ZGM0CG2baneFpzmQZZ0CEFqjol3Rys0is_iAC92YfJrbYLriXgJY0I9NZbBvBd2T1_/pub?gid=475318992&single=true&output=csv';
+// Fetch via Apps Script doGet — bypasses CORS entirely
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby89w-yVsIoJcgwPv3gwyjKZMBkISZUJOVjzZnT93mIkS-FnG5d0LgFqjyxF4vYLj5NPA/exec';
-
+const LEADS_CSV    = APPS_SCRIPT_URL + '?sheet=leads';
+const BROCHURE_CSV = APPS_SCRIPT_URL + '?sheet=brochure';
 // Write to Google Sheet via Apps Script
 async function writeToSheet(payload) {
   try {
@@ -977,10 +982,10 @@ async function fetchLiveData() {
   syncText.textContent = 'Syncing…';
   badge.className = 'sync-badge';
   try {
-    const fetchOpts = { cache: 'no-store', mode: 'cors' };
+    const opts = { redirect: 'follow' };
     const [lr, br] = await Promise.all([
-      fetch(LEADS_CSV + '&t=' + Date.now(), fetchOpts),
-      fetch(BROCHURE_CSV + '&t=' + Date.now(), fetchOpts)
+      fetch(LEADS_CSV + '&r=' + Date.now(), opts),
+      fetch(BROCHURE_CSV + '&r=' + Date.now(), opts)
     ]);
     if(lr.ok) {
       const csv = await lr.text();
