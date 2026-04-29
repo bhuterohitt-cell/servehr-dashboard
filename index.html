@@ -266,6 +266,22 @@ body { background: var(--bg); color: var(--text); font-family: var(--font); font
 .badge-hot { background: var(--danger-dim); color: var(--danger); border: 1px solid rgba(255,71,87,0.3); }
 .badge-closed { background: rgba(46,204,113,0.1); color: var(--success); border: 1px solid rgba(46,204,113,0.3); }
 .badge-notint { background: var(--surface3); color: var(--muted); border: 1px solid var(--border2); }
+.badge-quotation { background: rgba(0,229,195,0.1); color: var(--cyan); border: 1px solid rgba(0,229,195,0.3); }
+
+/* ── KANBAN PIPELINE ── */
+.pipeline-kanban { display:flex; gap:10px; overflow-x:auto; padding-bottom:10px; margin-bottom:20px; scrollbar-width:thin; }
+.pipeline-kanban::-webkit-scrollbar { height:4px; }
+.pipeline-col { flex:0 0 160px; background:var(--surface2); border-radius:var(--r); border:1px solid var(--border); display:flex; flex-direction:column; }
+.pipeline-col-header { padding:10px 12px 8px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.pipeline-col-title { font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; }
+.pipeline-col-count { font-family:var(--mono); font-size:11px; font-weight:700; width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center; }
+.pipeline-col-body { flex:1; padding:8px; display:flex; flex-direction:column; gap:6px; min-height:80px; }
+.pipeline-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--r-sm); padding:8px 10px; cursor:pointer; transition:all 0.15s; }
+.pipeline-card:hover { border-color:var(--border2); transform:translateY(-1px); box-shadow:0 4px 12px rgba(0,0,0,0.3); }
+.pipeline-card .co { font-size:11px; font-weight:600; color:var(--text); margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.pipeline-card .ct { font-size:10px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.pipeline-card .prio-dot { width:6px; height:6px; border-radius:50%; background:var(--danger); display:inline-block; margin-right:4px; box-shadow:0 0 4px var(--danger); }
+.pipeline-col-bar { height:3px; border-radius:0 0 var(--r) var(--r); }
 .badge-priority { background: rgba(198,241,53,0.1); color: var(--green); border: 1px solid rgba(198,241,53,0.3); }
 
 /* ── BUTTONS ── */
@@ -640,9 +656,15 @@ body { background: var(--bg); color: var(--text); font-family: var(--font); font
       </div>
     </div>
 
+    <!-- KANBAN PIPELINE -->
+    <div class="card" style="padding:16px 16px 12px;">
+      <div class="section-title" style="margin-bottom:14px;">Sales Pipeline</div>
+      <div class="pipeline-kanban" id="pipeline-kanban"></div>
+    </div>
+
     <div class="grid-2">
       <div class="card">
-        <div class="section-title">Pipeline Stages</div>
+        <div class="section-title">Stage Breakdown</div>
         <div id="pipeline-bars"></div>
       </div>
       <div class="card">
@@ -673,12 +695,14 @@ body { background: var(--bg); color: var(--text); font-family: var(--font); font
     <div style="margin-bottom:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div style="font-size:13px;color:var(--muted);">Filter by stage:</div>
       <select id="stage-filter" onchange="renderLeads()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:6px;font-size:12px;">
-        <option value="all">All stages</option>
-        <option value="new">New</option>
-        <option value="contacted">Contacted</option>
-        <option value="warm">Warm</option>
-        <option value="hot">Hot</option>
+        <option value="all">All Stages</option>
+        <option value="new">New Lead</option>
+        <option value="contacted">Not Responded</option>
+        <option value="warm">Responded</option>
+        <option value="quotation">Quotation Sent</option>
+        <option value="hot">Meeting Scheduled</option>
         <option value="not_interested">Not Interested</option>
+        <option value="closed">Closed / Won</option>
       </select>
     </div>
     <div class="table-wrap">
@@ -1117,8 +1141,19 @@ function renderOverview() {
   document.getElementById('ov-bro-bar').style.width = pct+'%';
   document.getElementById('ov-bro-pct').textContent = pct+'% complete';
 
+  // kanban pipeline
+  renderPipelineKanban();
+
   // pipeline bars
-  const stages = [{k:'new',l:'New',c:'#6366f1'},{k:'contacted',l:'Contacted',c:'#f59e0b'},{k:'warm',l:'Warm',c:'#f97316'},{k:'hot',l:'Hot',c:'#ef4444'},{k:'not_interested',l:'Not Interested',c:'#475569'}];
+  const stages = [
+    {k:'new',l:'New Lead',c:'#6366f1'},
+    {k:'contacted',l:'Not Responded',c:'#f59e0b'},
+    {k:'warm',l:'Responded',c:'#f97316'},
+    {k:'quotation',l:'Quotation Sent',c:'#00e5c3'},
+    {k:'hot',l:'Meeting Scheduled',c:'#ef4444'},
+    {k:'not_interested',l:'Not Interested',c:'#475569'},
+    {k:'closed',l:'Closed/Won',c:'#2ecc71'},
+  ];
   const pipelineEl = document.getElementById('pipeline-bars');
   pipelineEl.innerHTML = stages.map(s=>{
     const n = leadsData.filter(l=>l.stage===s.k).length;
@@ -1178,11 +1213,11 @@ function countBrochuresSent() {
 
 // ── LEADS ─────────────────────────────────────────────────────
 function stageClass(s) {
-  const map = {new:'badge-new',contacted:'badge-contacted',warm:'badge-warm',hot:'badge-hot',closed:'badge-closed',not_interested:'badge-notint',meeting:'badge-hot'};
+  const map = {new:'badge-new',contacted:'badge-contacted',warm:'badge-warm',quotation:'badge-quotation',hot:'badge-hot',closed:'badge-closed',not_interested:'badge-notint',meeting:'badge-hot'};
   return map[s]||'badge-new';
 }
 function stageLabel(s) {
-  const map = {new:'New',contacted:'Contacted',warm:'Warm',hot:'Meeting Scheduled',closed:'Closed',not_interested:'Not Interested',meeting:'Meeting Scheduled'};
+  const map = {new:'New Lead',contacted:'Not Responded',warm:'Responded',quotation:'Quotation Sent',hot:'Meeting Scheduled',closed:'Closed/Won',not_interested:'Not Interested',meeting:'Meeting Scheduled'};
   return map[s]||s;
 }
 
@@ -1198,12 +1233,13 @@ function renderLeads() {
       <td><span class="badge ${stageClass(l.stage)}">${stageLabel(l.stage)}</span></td>
       <td>${l.priority?'<span class="badge badge-priority">★ Priority</span>':'-'}</td>
       <td><select class="stage-select" onchange="updateStage(${i},this.value)">
-        <option value="new" ${l.stage==='new'?'selected':''}>New</option>
-        <option value="contacted" ${l.stage==='contacted'?'selected':''}>Contacted</option>
-        <option value="warm" ${l.stage==='warm'?'selected':''}>Warm</option>
+        <option value="new" ${l.stage==='new'?'selected':''}>New Lead</option>
+        <option value="contacted" ${l.stage==='contacted'?'selected':''}>Not Responded</option>
+        <option value="warm" ${l.stage==='warm'?'selected':''}>Responded</option>
+        <option value="quotation" ${l.stage==='quotation'?'selected':''}>Quotation Sent</option>
         <option value="hot" ${l.stage==='hot'?'selected':''}>Meeting Scheduled</option>
         <option value="not_interested" ${l.stage==='not_interested'?'selected':''}>Not Interested</option>
-        <option value="closed" ${l.stage==='closed'?'selected':''}>Closed</option>
+        <option value="closed" ${l.stage==='closed'?'selected':''}>Closed / Won</option>
       </select></td>
       <td><button class="contact-btn" onclick="openModal(${i})">Contact</button></td>
     </tr>`;
@@ -1221,9 +1257,10 @@ function updateStage(i, val) {
     new: 'New Lead',
     contacted: 'Not Responded',
     warm: 'Responded',
-    hot: 'Hot',
+    quotation: 'Quotation',
+    hot: 'Meeting Scheduled',
     not_interested: 'Not Interested',
-    closed: 'Closed'
+    closed: 'Closed/Won'
   };
 
   const today = new Date().toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'});
