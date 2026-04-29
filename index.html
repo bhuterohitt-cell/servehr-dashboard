@@ -1137,89 +1137,38 @@ function parseBrochureCSV(csv) {
 }
 
 // ── KANBAN PIPELINE ───────────────────────────────────────────
-const PIPELINE_COLS = [
-  {key:'new',          label:'New Lead',          color:'#6366f1', bg:'rgba(99,102,241,0.15)'},
-  {key:'contacted',    label:'Not Responded',     color:'#f59e0b', bg:'rgba(245,158,11,0.12)'},
-  {key:'warm',         label:'Responded',         color:'#f97316', bg:'rgba(255,107,53,0.12)'},
-  {key:'quotation',    label:'Quotation Sent',    color:'#00e5c3', bg:'rgba(0,229,195,0.12)'},
-  {key:'hot',          label:'Meeting Scheduled', color:'#c084fc', bg:'rgba(192,132,252,0.12)'},
-  {key:'not_interested',label:'Not Interested',   color:'#475569', bg:'rgba(71,85,105,0.12)'},
-  {key:'closed',       label:'Closed / Won',      color:'#2ecc71', bg:'rgba(46,204,113,0.12)'},
-];
-
-let dragLeadIdx = null; // index in leadsData being dragged
-
 function renderPipelineKanban() {
   const el = document.getElementById('pipeline-kanban');
   if(!el) return;
-
-  el.innerHTML = PIPELINE_COLS.map(col => {
+  const cols = [
+    {key:'new',         label:'New Lead',          color:'#6366f1', bg:'rgba(99,102,241,0.15)'},
+    {key:'contacted',   label:'Not Responded',      color:'#f59e0b', bg:'rgba(245,158,11,0.12)'},
+    {key:'warm',        label:'Responded',           color:'#f97316', bg:'rgba(255,107,53,0.12)'},
+    {key:'quotation',   label:'Quotation Sent',      color:'#00e5c3', bg:'rgba(0,229,195,0.12)'},
+    {key:'hot',         label:'Meeting Scheduled',   color:'#ef4444', bg:'rgba(239,68,68,0.12)'},
+    {key:'not_interested', label:'Not Interested',   color:'#475569', bg:'rgba(71,85,105,0.12)'},
+    {key:'closed',      label:'Closed / Won',        color:'#2ecc71', bg:'rgba(46,204,113,0.12)'},
+  ];
+  el.innerHTML = cols.map(col => {
     const leads = leadsData.filter(l => l.stage === col.key);
     const cards = leads.length
       ? leads.map(l => {
           const idx = leadsData.indexOf(l);
-          return `<div class="pipeline-card"
-            draggable="true"
-            data-idx="${idx}"
-            onclick="openModal(${idx})"
-            ondragstart="onCardDragStart(event,${idx})"
-            ondragend="onCardDragEnd(event)"
-            title="${l.company}">
+          return `<div class="pipeline-card" onclick="openModal(${idx})" title="${l.company}">
             <div class="co">${l.priority?'<span class="prio-dot"></span>':''}${l.company}</div>
             <div class="ct">${l.contact||'-'}</div>
           </div>`;
         }).join('')
-      : `<div class="pipeline-empty-slot">Drop here</div>`;
-
-    return `<div class="pipeline-col"
-        data-col="${col.key}"
-        ondragover="onColDragOver(event)"
-        ondragleave="onColDragLeave(event)"
-        ondrop="onColDrop(event,'${col.key}')">
+      : `<div style="font-size:10px;color:var(--muted);text-align:center;padding:14px 0;opacity:0.4;">Empty</div>`;
+    return `<div class="pipeline-col">
       <div class="pipeline-col-header">
         <span class="pipeline-col-title" style="color:${col.color};">${col.label}</span>
         <span class="pipeline-col-count" style="background:${col.bg};color:${col.color};">${leads.length}</span>
       </div>
-      <div class="pipeline-col-body" id="kb-col-${col.key}">${cards}</div>
+      <div class="pipeline-col-body">${cards}</div>
       <div class="pipeline-col-bar" style="background:${col.color};opacity:0.4;"></div>
     </div>`;
   }).join('');
-}
-
-function onCardDragStart(e, idx) {
-  dragLeadIdx = idx;
-  e.dataTransfer.effectAllowed = 'move';
-  e.dataTransfer.setData('text/plain', idx);
-  setTimeout(() => e.target.classList.add('dragging'), 0);
-}
-
-function onCardDragEnd(e) {
-  e.target.classList.remove('dragging');
-  document.querySelectorAll('.pipeline-col').forEach(c => c.classList.remove('drag-over'));
-  dragLeadIdx = null;
-}
-
-function onColDragOver(e) {
-  e.preventDefault();
-  e.dataTransfer.dropEffect = 'move';
-  const col = e.currentTarget;
-  document.querySelectorAll('.pipeline-col').forEach(c => c.classList.remove('drag-over'));
-  col.classList.add('drag-over');
-}
-
-function onColDragLeave(e) {
-  if(!e.currentTarget.contains(e.relatedTarget)) {
-    e.currentTarget.classList.remove('drag-over');
-  }
-}
-
-function onColDrop(e, newStage) {
-  e.preventDefault();
-  e.currentTarget.classList.remove('drag-over');
-  const idx = parseInt(e.dataTransfer.getData('text/plain'));
-  if(isNaN(idx) || idx < 0 || idx >= leadsData.length) return;
-  if(leadsData[idx].stage === newStage) return; // no change
-  updateStage(idx, newStage);
 }
 
 // ── OVERVIEW ──────────────────────────────────────────────────
