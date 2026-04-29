@@ -976,47 +976,16 @@ function showTabDirect(name) {
 }
 
 // ── CSV FETCH ─────────────────────────────────────────────────
-// JSONP fetch — bypasses CORS entirely, works from any origin including GitHub Pages
-function jsonpFetch(url, callbackName) {
-  return new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => {
-      delete window[callbackName];
-      const s = document.getElementById('jsonp-' + callbackName);
-      if(s) s.remove();
-      reject(new Error('JSONP timeout'));
-    }, 12000);
-
-    window[callbackName] = function(data) {
-      clearTimeout(timeout);
-      delete window[callbackName];
-      const s = document.getElementById('jsonp-' + callbackName);
-      if(s) s.remove();
-      resolve(data);
-    };
-
-    const script = document.createElement('script');
-    script.id = 'jsonp-' + callbackName;
-    script.src = url + '&callback=' + callbackName + '&r=' + Date.now();
-    script.onerror = () => {
-      clearTimeout(timeout);
-      delete window[callbackName];
-      script.remove();
-      reject(new Error('JSONP script error'));
-    };
-    document.head.appendChild(script);
-  });
-}
-
 async function fetchLiveData() {
   const badge = document.getElementById('sync-badge');
   const syncText = document.getElementById('sync-text');
   syncText.textContent = 'Syncing…';
   badge.className = 'sync-badge';
   try {
-    // Fetch both sheets via JSONP — Apps Script returns {leads: csvString, brochure: csvString}
-    const data = await jsonpFetch(APPS_SCRIPT_URL + '?action=readAll', 'serveHRCallback');
+    const res = await fetch(APPS_SCRIPT_URL + '?action=readAll&r=' + Date.now());
+    const data = await res.json();
     if(data.leads) {
-      console.log('[ServeHR] Leads CSV received, length:', data.leads.length);
+      console.log('[ServeHR] Leads received, length:', data.leads.length);
       parseLeeadsCSV(data.leads);
     }
     if(data.brochure) {
@@ -1105,33 +1074,44 @@ function parseLeeadsCSV(csv) {
     const company = get(cols, iCompany);
     if(!company || company.toLowerCase()==='company name') continue;
 
-    // Normalise status → internal stage key — matches exact Google Sheet values
+    // Normalise status → internal stage key — exact sheet values:
+    // New Lead, Not Responded, Responded, Quotation, Meeting Scheduled, Not Interested, Closed/Won, Sent
     const statusRaw = get(cols, iStatus).toLowerCase().trim();
     let stage = 'new';
-    if(statusRaw.includes('not interested'))                          stage = 'not_interested';
-    else if(statusRaw.includes('not responded'))                      stage = 'contacted';
-    else if(statusRaw.includes('quotation'))                          stage = 'quotation';
-    else if(statusRaw.includes('meeting') || statusRaw.includes('scheduled')) stage = 'hot';
-    else if(statusRaw.includes('responded'))                          stage = 'warm';
+    if     (statusRaw === 'not interested')                            stage = 'not_interested';
+    else if(statusRaw === 'not responded')                             stage = 'contacted';
+    else if(statusRaw === 'responded')                                 stage = 'warm';
+    else if(statusRaw === 'quotation')                                 stage = 'quotation';
+    else if(statusRaw === 'meeting scheduled')                         stage = 'hot';
+    else if(statusRaw === 'closed' || statusRaw === 'closed/won' || statusRaw === 'won') stage = 'closed';
+    else if(statusRaw === 'sent')                                      stage = 'contacted';
+    else if(statusRaw === 'new lead' || statusRaw === '')              stage = 'new';
+    // partial fallbacks
+    else if(statusRaw.includes('not interested'))                      stage = 'not_interested';
+    else if(statusRaw.includes('quotation'))                           stage = 'quotation';
+    else if(statusRaw.includes('meeting'))                             stage = 'hot';
+    else if(statusRaw.includes('responded') && !statusRaw.includes('not')) stage = 'warm';
+    else if(statusRaw.includes('not responded'))                       stage = 'contacted';
     else if(statusRaw.includes('closed') || statusRaw.includes('won')) stage = 'closed';
-    else if(statusRaw.includes('new') || statusRaw === '')            stage = 'new';
 
     // Normalise priority
     const priorityRaw = get(cols, iPriority).toLowerCase();
     const priority = priorityRaw==='high';
 
+    const iHeadcount = findCol(headers, 'employee count', 'headcount', 'employees');
     parsed.push({
       company,
-      contact:  get(cols, iContact),
-      position: get(cols, iPosition),
-      email:    get(cols, iEmail),
-      phone:    get(cols, iPhone),
+      contact:   get(cols, iContact),
+      position:  get(cols, iPosition),
+      email:     get(cols, iEmail),
+      phone:     get(cols, iPhone),
       stage,
       priority,
-      source:   get(cols, iSource),
-      industry: get(cols, iSector),
-      location: get(cols, iLocation),
-      notes:    get(cols, iNotes),
+      source:    get(cols, iSource),
+      industry:  get(cols, iSector),
+      location:  get(cols, iLocation),
+      headcount: get(cols, iHeadcount),
+      notes:     get(cols, iNotes),
     });
   }
 
