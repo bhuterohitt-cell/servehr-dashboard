@@ -990,12 +990,14 @@ async function fetchLiveData() {
     badge.className = 'sync-badge live';
     const now = new Date();
     syncText.textContent = 'Live · ' + now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+    // Always refresh overview stats + kanban, then also refresh active panel
+    renderOverview();
     const activePanel = document.querySelector('.panel.active');
     if(activePanel) {
       const id = activePanel.id.replace('panel-','');
-      const renderMap = {overview:renderOverview,leads:renderLeads,brochure:renderBrochure,analytics:renderAnalytics,followups:renderFollowUps,pitch:renderPitch,journal:renderJournal};
+      const renderMap = {leads:renderLeads,brochure:renderBrochure,analytics:renderAnalytics,followups:renderFollowUps,pitch:renderPitch,journal:renderJournal};
       if(renderMap[id]) renderMap[id]();
-    } else { renderOverview(); }
+    }
   } catch(e) {
     badge.className = 'sync-badge offline';
     syncText.textContent = 'Offline · cached';
@@ -1064,18 +1066,16 @@ function parseLeeadsCSV(csv) {
     const company = get(cols, iCompany);
     if(!company || company.toLowerCase()==='company name') continue;
 
-    // Normalise status → internal stage key
-    const statusRaw = get(cols, iStatus).toLowerCase();
+    // Normalise status → internal stage key — matches exact Google Sheet values
+    const statusRaw = get(cols, iStatus).toLowerCase().trim();
     let stage = 'new';
-    if(statusRaw.includes('responded') && !statusRaw.includes('not')) stage='warm';
-    else if(statusRaw.includes('warm')) stage='warm';
-    else if(statusRaw.includes('hot')) stage='hot';
-    else if(statusRaw.includes('not interested')) stage='not_interested';
-    else if(statusRaw.includes('not responded') || statusRaw.includes('no response')) stage='contacted';
-    else if(statusRaw.includes('contacted')) stage='contacted';
-    else if(statusRaw.includes('closed') || statusRaw.includes('won')) stage='closed';
-    else if(statusRaw.includes('new')) stage='new';
-    else if(statusRaw==='') stage='new';
+    if(statusRaw.includes('not interested'))                          stage = 'not_interested';
+    else if(statusRaw.includes('not responded'))                      stage = 'contacted';
+    else if(statusRaw.includes('quotation'))                          stage = 'quotation';
+    else if(statusRaw.includes('meeting') || statusRaw.includes('scheduled')) stage = 'hot';
+    else if(statusRaw.includes('responded'))                          stage = 'warm';
+    else if(statusRaw.includes('closed') || statusRaw.includes('won')) stage = 'closed';
+    else if(statusRaw.includes('new') || statusRaw === '')            stage = 'new';
 
     // Normalise priority
     const priorityRaw = get(cols, iPriority).toLowerCase();
@@ -1125,6 +1125,41 @@ function parseBrochureCSV(csv) {
       if(sentSet[c.company]!==undefined) c.sent = sentSet[c.company];
     });
   });
+}
+
+// ── KANBAN PIPELINE ───────────────────────────────────────────
+function renderPipelineKanban() {
+  const el = document.getElementById('pipeline-kanban');
+  if(!el) return;
+  const cols = [
+    {key:'new',         label:'New Lead',          color:'#6366f1', bg:'rgba(99,102,241,0.15)'},
+    {key:'contacted',   label:'Not Responded',      color:'#f59e0b', bg:'rgba(245,158,11,0.12)'},
+    {key:'warm',        label:'Responded',           color:'#f97316', bg:'rgba(255,107,53,0.12)'},
+    {key:'quotation',   label:'Quotation Sent',      color:'#00e5c3', bg:'rgba(0,229,195,0.12)'},
+    {key:'hot',         label:'Meeting Scheduled',   color:'#ef4444', bg:'rgba(239,68,68,0.12)'},
+    {key:'not_interested', label:'Not Interested',   color:'#475569', bg:'rgba(71,85,105,0.12)'},
+    {key:'closed',      label:'Closed / Won',        color:'#2ecc71', bg:'rgba(46,204,113,0.12)'},
+  ];
+  el.innerHTML = cols.map(col => {
+    const leads = leadsData.filter(l => l.stage === col.key);
+    const cards = leads.length
+      ? leads.map(l => {
+          const idx = leadsData.indexOf(l);
+          return `<div class="pipeline-card" onclick="openModal(${idx})" title="${l.company}">
+            <div class="co">${l.priority?'<span class="prio-dot"></span>':''}${l.company}</div>
+            <div class="ct">${l.contact||'-'}</div>
+          </div>`;
+        }).join('')
+      : `<div style="font-size:10px;color:var(--muted);text-align:center;padding:14px 0;opacity:0.4;">Empty</div>`;
+    return `<div class="pipeline-col">
+      <div class="pipeline-col-header">
+        <span class="pipeline-col-title" style="color:${col.color};">${col.label}</span>
+        <span class="pipeline-col-count" style="background:${col.bg};color:${col.color};">${leads.length}</span>
+      </div>
+      <div class="pipeline-col-body">${cards}</div>
+      <div class="pipeline-col-bar" style="background:${col.color};opacity:0.4;"></div>
+    </div>`;
+  }).join('');
 }
 
 // ── OVERVIEW ──────────────────────────────────────────────────
@@ -1274,11 +1309,12 @@ function updateStage(i, val) {
     showToast(ok ? 'Sheet updated: ' + lead.company : 'Saved locally (sheet offline)');
   });
 
-  // Re-render current view
+  // Re-render — always refresh kanban + stats, then active panel
+  renderPipelineKanban();
   const activePanel = document.querySelector('.panel.active');
   if(activePanel) {
     const id = activePanel.id.replace('panel-','');
-    const renderMap = {overview:renderOverview, leads:renderLeads, followups:renderFollowUps};
+    const renderMap = {overview:renderOverview, leads:renderLeads, followups:renderFollowUps, analytics:renderAnalytics};
     if(renderMap[id]) renderMap[id]();
   }
 }
