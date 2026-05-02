@@ -200,6 +200,20 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 .save-btn{background:var(--green);color:#080b10;font-weight:700;font-family:var(--font);font-size:13px;padding:11px 26px;border:none;border-radius:var(--r-sm);cursor:pointer;transition:all .2s;box-shadow:0 4px 16px var(--green-glow);}
 .save-btn:hover{background:#5fffb8;transform:translateY(-1px);}
 
+/* ═══════════ PIPELINE TOGGLES ═══════════ */
+.toggle-pill{display:inline-block;padding:3px 10px;border-radius:20px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);cursor:pointer;font-size:11px;transition:all .2s;user-select:none;white-space:nowrap;color:var(--text2);}
+.toggle-pill:hover{border-color:rgba(255,255,255,0.25);}
+.toggle-pill.t-yes{background:rgba(57,255,159,0.15);border-color:var(--green);color:var(--green);}
+.toggle-pill.t-hot{background:rgba(255,140,66,0.15);border-color:var(--orange);color:var(--orange);}
+.inline-note{background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,0.1);color:var(--text2);font-size:11px;width:110px;outline:none;padding:2px 3px;font-family:var(--font);}
+.inline-note:focus{border-bottom-color:var(--green);color:var(--text);}
+.pipeline-bar-row{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+.p-kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 18px;flex:1;min-width:100px;}
+.p-kpi .p-val{font-family:var(--mono);font-size:22px;color:var(--green);}
+.p-kpi .p-lbl{font-size:10px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:.05em;}
+.p-kpi.hot .p-val{color:var(--orange);}
+.p-kpi.blue .p-val{color:var(--blue);}
+
 /* ═══════════ BROCHURE ═══════════ */
 .brochure-hero{background:linear-gradient(135deg,var(--surface) 0%,var(--surface2) 100%);border:1px solid var(--border);border-radius:var(--r);padding:22px;margin-bottom:14px;display:flex;align-items:center;gap:24px;}
 .brochure-num{font-family:var(--mono);font-size:52px;font-weight:400;color:var(--green);line-height:1;text-shadow:0 0 30px var(--green-glow);}
@@ -502,12 +516,21 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
           <div style="font-size:11px;color:var(--muted);margin-top:5px;" id="bro-pct">0 / 100</div>
         </div>
       </div>
+
+      <!-- Pipeline KPIs -->
+      <div class="pipeline-bar-row" id="bro-pipeline-kpis">
+        <div class="p-kpi"><div class="p-val" id="bpk-sent">0</div><div class="p-lbl">Brochures Sent</div></div>
+        <div class="p-kpi blue"><div class="p-val" id="bpk-contacted">0</div><div class="p-lbl">Contacts Received</div></div>
+        <div class="p-kpi hot"><div class="p-val" id="bpk-qualified">0</div><div class="p-lbl">Qualified Leads</div></div>
+        <div class="p-kpi"><div class="p-val" id="bpk-rate">—</div><div class="p-lbl">Qualification Rate</div></div>
+      </div>
+
       <div class="section-title">Turbhe MIDC</div>
-      <div class="table-wrap" style="margin-bottom:14px;"><table class="lead-table" id="turbhe-table" style="min-width:500px;"></table></div>
+      <div class="table-wrap" style="margin-bottom:14px;"><table class="lead-table" id="turbhe-table" style="min-width:700px;"></table></div>
       <div class="section-title">Taloja MIDC</div>
-      <div class="table-wrap" style="margin-bottom:14px;"><table class="lead-table" id="taloja-table" style="min-width:500px;"></table></div>
+      <div class="table-wrap" style="margin-bottom:14px;"><table class="lead-table" id="taloja-table" style="min-width:700px;"></table></div>
       <div class="section-title">Dombivli MIDC</div>
-      <div class="table-wrap"><table class="lead-table" id="dombivli-table" style="min-width:500px;"></table></div>
+      <div class="table-wrap"><table class="lead-table" id="dombivli-table" style="min-width:700px;"></table></div>
     </div>
 
     <!-- ANALYTICS -->
@@ -1259,18 +1282,49 @@ function renderBrochure() {
   document.getElementById('bro-bar').style.width = pct + '%';
   document.getElementById('bro-pct').textContent  = sent + ' / 100 sent this week';
 
+  // Pipeline KPIs
+  const contacted = brochures.filter(b => b.contact_received).length;
+  const qualified = brochures.filter(b => b.qualified_lead).length;
+  const rate = contacted ? Math.round(qualified/contacted*100)+'%' : '—';
+  document.getElementById('bpk-sent').textContent      = sent;
+  document.getElementById('bpk-contacted').textContent = contacted;
+  document.getElementById('bpk-qualified').textContent = qualified;
+  document.getElementById('bpk-rate').textContent      = rate;
+
   const areas = {'Turbhe MIDC':'turbhe-table','Taloja MIDC':'taloja-table','Dombivli MIDC':'dombivli-table'};
   Object.entries(areas).forEach(([area, tid]) => {
     const areaData = brochures.filter(b => b.area === area);
     const el = document.getElementById(tid);
-    el.innerHTML = `<thead><tr><th>Company</th><th>Address</th><th>Assigned To</th><th>Status</th></tr></thead>
+    el.innerHTML = `<thead><tr>
+      <th>Company</th><th>Address</th><th>Assigned To</th><th>Status</th>
+      <th>📞 Contact Rcvd?</th><th>✅ Qualified?</th><th>Notes</th>
+    </tr></thead>
     <tbody>${areaData.map(b=>`<tr>
       <td style="font-weight:500;">${b.company}</td>
       <td style="color:var(--muted);font-size:12px;">${b.address||''}</td>
       <td style="font-size:12px;color:var(--text2);">${b.assigned_to||''}</td>
       <td><button class="dispatch-btn ${b.status==='Sent'?'sent':''}" onclick="toggleBrochure('${b.id}','${b.status}')">${b.status==='Sent'?'✓ Sent':'Mark Sent'}</button></td>
+      <td><span class="toggle-pill ${b.contact_received?'t-yes':''}" onclick="toggleBroField('${b.id}','contact_received',${!b.contact_received})">${b.contact_received?'✓ Yes':'No'}</span></td>
+      <td><span class="toggle-pill ${b.qualified_lead?'t-hot':''}" onclick="toggleBroField('${b.id}','qualified_lead',${!b.qualified_lead})">${b.qualified_lead?'🔥 Yes':'No'}</span></td>
+      <td><input class="inline-note" type="text" value="${(b.qualification_notes||'').replace(/"/g,'&quot;')}" onblur="saveBroNote('${b.id}',this.value)" placeholder="Add note…"/></td>
     </tr>`).join('')}</tbody>`;
   });
+}
+
+async function toggleBroField(id, field, value) {
+  const bro = allBrochures.find(b => b.id === id);
+  if(!bro) return;
+  bro[field] = value;
+  renderBrochure();
+  try { await sbPatch('brochure_tracker','id=eq.'+id,{[field]:value}); }
+  catch(e) { bro[field]=!value; renderBrochure(); showToast('Update failed',true); }
+}
+
+async function saveBroNote(id, value) {
+  const bro = allBrochures.find(b => b.id === id);
+  if(bro) bro.qualification_notes = value;
+  try { await sbPatch('brochure_tracker','id=eq.'+id,{qualification_notes:value}); }
+  catch(e) { showToast('Note save failed',true); }
 }
 
 async function toggleBrochure(id, currentStatus) {
@@ -1284,7 +1338,6 @@ async function toggleBrochure(id, currentStatus) {
     showToast(bro.company+': '+newStatus);
   }catch(e){showToast('Update failed',true);bro.status=currentStatus;renderBrochure();}
 }
-
 // ══════════════════════════════════════════════════
 // ANALYTICS
 // ══════════════════════════════════════════════════
