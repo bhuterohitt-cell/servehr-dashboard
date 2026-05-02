@@ -352,6 +352,18 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 .lead-indicator{width:3px;height:36px;border-radius:2px;flex-shrink:0;}
 .action-info{flex:1;}
 
+/* DUPLICATE WARNING */
+.dup-warning{
+  display:none;margin-top:8px;padding:10px 14px;
+  background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.3);
+  border-radius:var(--r-sm);font-size:12px;color:var(--warn);line-height:1.6;
+  animation:fadeUp 0.2s ease;
+}
+.dup-warning.show{display:block;}
+.dup-warning strong{color:#fde68a;}
+.dup-warning .dup-owner{display:inline-flex;align-items:center;gap:5px;margin-top:4px;}
+.dup-owner-av{width:18px;height:18px;border-radius:50%;font-size:8px;font-weight:700;color:#080b10;display:inline-flex;align-items:center;justify-content:center;}
+
 .add-followup{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
 .add-followup input{flex:1;min-width:140px;background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:8px 11px;border-radius:var(--r-sm);font-size:13px;transition:all 0.2s;}
 .add-followup input:focus{outline:none;border-color:var(--green);}
@@ -629,7 +641,11 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
     <button class="modal-close" onclick="closeModal('add-lead-modal')">✕</button>
     <div class="modal-company" style="margin-bottom:18px;">Add New Lead</div>
     <div class="form-grid">
-      <div class="form-group full"><label class="form-label">Company Name *</label><input type="text" class="form-input" id="nl-company" placeholder="Company name"/></div>
+      <div class="form-group full">
+        <label class="form-label">Company Name *</label>
+        <input type="text" class="form-input" id="nl-company" placeholder="Company name" oninput="checkDuplicate(this.value)" autocomplete="off"/>
+        <div class="dup-warning" id="dup-warning"></div>
+      </div>
       <div class="form-group"><label class="form-label">Location</label><input type="text" class="form-input" id="nl-location" placeholder="City"/></div>
       <div class="form-group"><label class="form-label">Sector / Industry</label><input type="text" class="form-input" id="nl-sector" placeholder="e.g. Pharma"/></div>
       <div class="form-group"><label class="form-label">Contact Name</label><input type="text" class="form-input" id="nl-contact" placeholder="Contact person"/></div>
@@ -1345,10 +1361,57 @@ async function saveJournal() {
   renderJournal();
 }
 
+// ── DUPLICATE CHECK ───────────────────────────────────────────
+let dupTimer = null;
+function checkDuplicate(value) {
+  clearTimeout(dupTimer);
+  const warnEl = document.getElementById('dup-warning');
+  const query = value.trim().toLowerCase();
+  if(query.length < 3) { warnEl.className = 'dup-warning'; return; }
+
+  dupTimer = setTimeout(() => {
+    // Find any leads where company name closely matches, owned by someone else
+    const matches = allLeads.filter(l => {
+      const co = (l.company || '').toLowerCase();
+      return co.includes(query) || query.includes(co.slice(0, Math.max(4, co.length - 2)));
+    });
+
+    const others = matches.filter(l => l.assigned_to !== currentUser.name);
+
+    if(others.length === 0) {
+      warnEl.className = 'dup-warning';
+      return;
+    }
+
+    // Build warning message
+    const ownerGroups = {};
+    others.forEach(l => {
+      if(!ownerGroups[l.assigned_to]) ownerGroups[l.assigned_to] = [];
+      ownerGroups[l.assigned_to].push(l.company);
+    });
+
+    const ownerLines = Object.entries(ownerGroups).map(([owner, companies]) => {
+      const i = allMembers.findIndex(m => m.name === owner);
+      const color = MEMBER_COLORS[Math.max(0, i) % MEMBER_COLORS.length];
+      const initials = owner.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+      const coList = [...new Set(companies)].join(', ');
+      return `<div class="dup-owner">
+        <span class="dup-owner-av" style="background:${color};">${initials}</span>
+        <strong>${owner}</strong> already has: <em>${coList}</em>
+      </div>`;
+    }).join('');
+
+    warnEl.innerHTML = `⚠️ Possible duplicate detected!<br>${ownerLines}<br><span style="color:var(--text2);font-size:11px;">You can still save if this is a different contact at the same company.</span>`;
+    warnEl.className = 'dup-warning show';
+  }, 400);
+}
+
 // ── ADD LEAD ─────────────────────────────────────────────────
 function openAddLead() {
   document.getElementById('add-lead-modal').classList.add('open');
   document.getElementById('nl-status').textContent = '';
+  document.getElementById('nl-company').value = '';
+  document.getElementById('dup-warning').className = 'dup-warning';
 }
 
 async function submitNewLead() {
