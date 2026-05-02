@@ -128,7 +128,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 /* ═══════════ GRIDS & CARDS ═══════════ */
 .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px;}
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;}
-.grid-5{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;}.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;}
 @media(max-width:1100px){.grid-4{grid-template-columns:repeat(2,1fr);}}
 .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px;position:relative;overflow:hidden;cursor:default;transition:transform .15s,box-shadow .15s;}
 .stat-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3);}
@@ -388,8 +388,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
     <div class="nav-item" onclick="navTo('leads',this)"><span class="nav-icon">◎</span>Leads Tracker</div>
     <div class="nav-item" onclick="navTo('analytics',this)"><span class="nav-icon">▦</span>Analytics</div>
     <div class="nav-item manager-only" onclick="navTo('team',this)"><span class="nav-icon">👥</span>Team View</div>
-    <div class="nav-item" onclick="navTo('leaderboard',this)"><span class="nav-icon">🏆</span>Leaderboard</div>
-    <div class="nav-item manager-only" onclick="navTo('meetings',this)"><span class="nav-icon">📅</span>Meetings</div>
     <div class="nav-item manager-only" onclick="navTo('clients',this)"><span class="nav-icon">★</span>Clients<span style="font-size:9px;color:var(--muted);margin-left:auto;font-family:var(--mono);">MGR</span></div>
   </div>
   <div class="sidebar-section">
@@ -440,12 +438,11 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
     <!-- OVERVIEW -->
     <div class="panel active" id="panel-overview">
       <div id="pw-banner"></div>
-      <div class="grid-5">
+      <div class="grid-4">
         <div class="stat-card accent"><div class="label">Total Leads</div><div class="value" id="ov-total">—</div><div class="sub">in pipeline</div><div class="card-glow"></div></div>
-        <div class="stat-card warn"><div class="label">Warm Leads</div><div class="value" id="ov-warm">—</div><div class="sub">responded / meeting</div><div class="card-glow"></div></div>
+        <div class="stat-card warn"><div class="label">Warm Leads</div><div class="value" id="ov-warm">—</div><div class="sub">responded</div><div class="card-glow"></div></div>
         <div class="stat-card purple"><div class="label">High Priority</div><div class="value" id="ov-priority">—</div><div class="sub">need attention</div><div class="card-glow"></div></div>
         <div class="stat-card blue"><div class="label">Brochures Sent</div><div class="value" id="ov-brochures">—</div><div class="sub">of 100 weekly target</div><div class="card-glow"></div></div>
-        <div class="stat-card" style="border-color:var(--green);background:var(--green-dim);"><div class="label" style="color:var(--green);">Closed / Won</div><div class="value" id="ov-won" style="color:var(--green);">—</div><div class="sub">deals closed</div><div class="card-glow" style="background:var(--green);"></div></div>
       </div>
       <div class="card" style="padding:14px 14px 10px;">
         <div class="section-title" style="margin-bottom:12px;">Pipeline Kanban</div>
@@ -504,13 +501,19 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
           <div class="brochure-big-bar"><div class="brochure-big-fill" id="bro-bar" style="width:0%"></div></div>
           <div style="font-size:11px;color:var(--muted);margin-top:5px;" id="bro-pct">0 / 100</div>
         </div>
+        <div style="display:flex;gap:8px;flex-shrink:0;">
+          <button class="add-btn" onclick="openBrochureModal('add-brochure-modal')">+ Add Company</button>
+          <button class="add-btn" style="background:var(--surface2);border-color:var(--border2);color:var(--text2);" onclick="openBrochureModal('bulk-brochure-modal')">⬆ Bulk Import</button>
+        </div>
       </div>
       <div class="section-title">Turbhe MIDC</div>
       <div class="table-wrap" style="margin-bottom:14px;"><table class="lead-table" id="turbhe-table" style="min-width:500px;"></table></div>
       <div class="section-title">Taloja MIDC</div>
       <div class="table-wrap" style="margin-bottom:14px;"><table class="lead-table" id="taloja-table" style="min-width:500px;"></table></div>
       <div class="section-title">Dombivli MIDC</div>
-      <div class="table-wrap"><table class="lead-table" id="dombivli-table" style="min-width:500px;"></table></div>
+      <div class="table-wrap" style="margin-bottom:14px;"><table class="lead-table" id="dombivli-table" style="min-width:500px;"></table></div>
+      <div class="section-title">Other Areas</div>
+      <div class="table-wrap"><table class="lead-table" id="other-table" style="min-width:500px;"></table></div>
     </div>
 
     <!-- ANALYTICS -->
@@ -543,38 +546,11 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
       </div>
     </div>
 
-
-    <!-- LEADERBOARD -->
-    <div class="panel" id="panel-leaderboard">
-      <div class="section-title" style="margin-bottom:14px;">🏆 Team Leaderboard</div>
-      <div class="grid-3" id="lb-kpis"></div>
-      <div class="card" style="margin-top:12px;">
-        <table class="lead-table" style="min-width:600px;">
-          <thead><tr><th>Rank</th><th>Team Member</th><th>Total Leads</th><th>Won</th><th>In Progress</th><th>Lost</th><th>Brochures</th><th>Win Rate</th></tr></thead>
-          <tbody id="lb-body"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- MEETINGS -->
-    <div class="panel" id="panel-meetings">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-        <div class="section-title">📅 Meetings</div>
-        <button class="add-btn" onclick="openModal('add-meeting-modal')">+ Log Meeting</button>
-      </div>
-      <div class="table-wrap">
-        <table class="lead-table" style="min-width:900px;">
-          <thead><tr><th>Date</th><th>Company</th><th>Attendees</th><th>Outcome</th><th>Notes</th><th>Next Steps</th><th>Logged By</th></tr></thead>
-          <tbody id="meetings-body"></tbody>
-        </table>
-      </div>
-    </div>
     <!-- CLIENTS (manager only) -->
     <div class="panel" id="panel-clients">
       <div class="client-tabs">
         <button class="client-tab active" onclick="switchClientTab('mc',this)">📋 Monthly Compliance</button>
         <button class="client-tab" onclick="switchClientTab('ot',this)">⚡ One Time Activity</button>
-        <button class="client-tab" onclick="switchClientTab('posh',this)">🛡️ POSH Training</button>
       </div>
       <div class="client-panel active" id="client-mc">
         <div class="grid-3" id="mc-stats"></div>
@@ -591,14 +567,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
           <table class="lead-table" style="min-width:800px;">
             <thead><tr><th>Company</th><th>Scope</th><th>One-Time Fees</th><th>Lead Owner</th><th>Work Status</th><th>Payment / Invoice</th></tr></thead>
             <tbody id="ot-body"></tbody>
-          </table>
-        </div>
-      </div>
-      <div class="client-panel" id="client-posh">
-        <div class="table-wrap">
-          <table class="lead-table" style="min-width:600px;">
-            <thead><tr><th>Company</th><th>Awareness Session</th><th>ICC Setup</th><th>Trainer</th></tr></thead>
-            <tbody id="posh-body"></tbody>
           </table>
         </div>
       </div>
@@ -770,8 +738,6 @@ let allJournal    = [];
 let allMembers    = [];
 let allNotifs     = [];
 let allClients    = [];
-let allMeetings   = [];
-let allPosh       = [];
 let manualFollowUps = [];
 
 // ══════════════════════════════════════════════════
@@ -1037,9 +1003,7 @@ async function loadData() {
     // Try to load clients + notifs (tables may not exist yet)
     fetches.push(
       sb('sales_clients', { select: '*', order: 'client_type.asc,company.asc' }).catch(()=>[]),
-      sb('notifications', { select: '*', order: 'created_at.desc' }).catch(()=>[]),
-      sb('meetings', { select: '*', order: 'meeting_date.desc' }).catch(()=>[]),
-      sb('posh_training', { select: '*', order: 'company.asc' }).catch(()=>[])
+      sb('notifications', { select: '*', order: 'created_at.desc' }).catch(()=>[])
     );
     const results = await Promise.all(fetches);
     allLeads     = results[0] || [];
@@ -1047,8 +1011,6 @@ async function loadData() {
     allJournal   = results[2] || [];
     allClients   = results[3] || [];
     allNotifs    = results[4] || [];
-    allMeetings  = results[5] || [];
-    allPosh      = results[6] || [];
     setSyncStatus('live');
     updateNotifBadge();
     refreshCurrentPanel();
@@ -1105,7 +1067,6 @@ function navTo(name, el) {
   const renders = {
     overview:renderOverview, leads:renderLeads, brochure:renderBrochure,
     analytics:renderAnalytics, team:renderTeam, clients:renderClients,
-    leaderboard:renderLeaderboard, meetings:renderMeetings,
     followups:renderFollowUps, pitch:renderPitch, journal:renderJournal,
     notifications:renderNotifications
   };
@@ -1149,17 +1110,15 @@ function switchView(member, el) {
 function renderOverview() {
   const leads    = getFilteredLeads();
   const brochures = getFilteredBrochures();
-  const warm  = leads.filter(l => ['Responded','Meeting Scheduled','In Progress','Follow Up'].includes(l.status)).length;
+  const warm  = leads.filter(l => ['Responded','Meeting Scheduled'].includes(l.status)).length;
   const prio  = leads.filter(l => l.priority === 'High').length;
   const sentB = brochures.filter(b => b.status === 'Sent' || b.status === 'Dispatched').length;
   const broP  = Math.min(100, Math.round(sentB/100*100));
 
-  const won   = leads.filter(l => l.status === 'Closed/Won').length;
   document.getElementById('ov-total').textContent = leads.length;
   document.getElementById('ov-warm').textContent  = warm;
   document.getElementById('ov-priority').textContent = prio;
   document.getElementById('ov-brochures').textContent = sentB;
-  document.getElementById('ov-won').textContent = won;
   document.getElementById('ov-bro-count').textContent = sentB;
   document.getElementById('ov-bro-bar').style.width = broP + '%';
   document.getElementById('ov-bro-pct').textContent  = broP + '% complete';
@@ -1169,7 +1128,7 @@ function renderOverview() {
   const stages = [
     {k:'New Lead',c:'#6366f1'},{k:'Not Responded',c:'#f59e0b'},{k:'Sent',c:'#60a5fa'},
     {k:'Responded',c:'#f97316'},{k:'Quotation',c:'#22d3ee'},{k:'Meeting Scheduled',c:'#ef4444'},
-    {k:'In Progress',c:'#f97316'},{k:'Follow Up',c:'#22d3ee'},{k:'On Hold',c:'#94a3b8'},{k:'Not Interested',c:'#475569'},{k:'Lost',c:'#ff4d6d'},{k:'Closed/Won',c:'#39ff9f'}
+    {k:'Not Interested',c:'#475569'},{k:'Closed/Won',c:'#39ff9f'}
   ];
   document.getElementById('pipeline-bars').innerHTML = stages.map(s => {
     const n = leads.filter(l => l.status === s.k).length;
@@ -1250,7 +1209,7 @@ async function onDrop(e,newStatus){
 // LEADS TABLE
 // ══════════════════════════════════════════════════
 function statusBadge(s) {
-  const map = {'New Lead':'badge-new','Not Responded':'badge-contacted','Sent':'badge-contacted','Responded':'badge-warm','Quotation':'badge-quotation','Meeting Scheduled':'badge-hot','Closed/Won':'badge-closed','Won':'badge-closed','Lost':'badge-notint','Not Interested':'badge-notint','In Progress':'badge-warm','Follow Up':'badge-quotation','On Hold':'badge-contacted'};
+  const map = {'New Lead':'badge-new','Not Responded':'badge-contacted','Sent':'badge-contacted','Responded':'badge-warm','Quotation':'badge-quotation','Meeting Scheduled':'badge-hot','Closed/Won':'badge-closed','Not Interested':'badge-notint'};
   return `<span class="badge ${map[s]||'badge-new'}">${s}</span>`;
 }
 
@@ -1281,7 +1240,7 @@ function renderLeads() {
       <td>${statusBadge(l.status)}</td>
       <td>${l.priority==='High'?'<span class="badge badge-priority">★ High</span>':l.priority||'—'}</td>
       <td><div style="display:flex;align-items:center;gap:6px;"><div style="width:20px;height:20px;border-radius:50%;background:${ownerColor};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#080b10;flex-shrink:0;">${initials}</div><span style="font-size:12px;color:var(--text2);">${(l.assigned_to||'').split(' ')[0]}</span></div></td>
-      <td><select class="stage-select" onchange="updateLeadStatus('${l.id}',this.value)">${['New Lead','Not Responded','Sent','Responded','Quotation','Meeting Scheduled','In Progress','Follow Up','On Hold','Not Interested','Lost','Closed/Won'].map(s=>`<option ${l.status===s?'selected':''}>${s}</option>`).join('')}</select></td>
+      <td><select class="stage-select" onchange="updateLeadStatus('${l.id}',this.value)">${['New Lead','Not Responded','Sent','Responded','Quotation','Meeting Scheduled','Not Interested','Closed/Won'].map(s=>`<option ${l.status===s?'selected':''}>${s}</option>`).join('')}</select></td>
       <td><button class="contact-btn" onclick="openContactModal('${l.id}')">Contact</button></td>
     </tr>`;
   }).join('');
@@ -1307,6 +1266,7 @@ function renderBrochure() {
   document.getElementById('bro-pct').textContent  = sent + ' / 100 sent this week';
 
   const areas = {'Turbhe MIDC':'turbhe-table','Taloja MIDC':'taloja-table','Dombivli MIDC':'dombivli-table'};
+  const knownAreas = Object.keys(areas);
   Object.entries(areas).forEach(([area, tid]) => {
     const areaData = brochures.filter(b => b.area === area);
     const el = document.getElementById(tid);
@@ -1318,6 +1278,20 @@ function renderBrochure() {
       <td><button class="dispatch-btn ${b.status==='Sent'?'sent':''}" onclick="toggleBrochure('${b.id}','${b.status}')">${b.status==='Sent'?'✓ Sent':'Mark Sent'}</button></td>
     </tr>`).join('')}</tbody>`;
   });
+
+  // Other areas table
+  const otherEl = document.getElementById('other-table');
+  if(otherEl) {
+    const otherData = brochures.filter(b => !knownAreas.includes(b.area));
+    otherEl.innerHTML = `<thead><tr><th>Company</th><th>Address</th><th>Area</th><th>Assigned To</th><th>Status</th></tr></thead>
+    <tbody>${otherData.length ? otherData.map(b=>`<tr>
+      <td style="font-weight:500;">${b.company}</td>
+      <td style="color:var(--muted);font-size:12px;">${b.address||''}</td>
+      <td style="font-size:12px;color:var(--text2);">${b.area||''}</td>
+      <td style="font-size:12px;color:var(--text2);">${b.assigned_to||''}</td>
+      <td><button class="dispatch-btn ${b.status==='Sent'?'sent':''}" onclick="toggleBrochure('${b.id}','${b.status}')">${b.status==='Sent'?'✓ Sent':'Mark Sent'}</button></td>
+    </tr>`).join('') : '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:14px;">No companies in other areas.</td></tr>'}</tbody>`;
+  }
 }
 
 async function toggleBrochure(id, currentStatus) {
@@ -1390,7 +1364,6 @@ function renderTeam() {
 // CLIENTS (MANAGER ONLY)
 // ══════════════════════════════════════════════════
 function switchClientTab(tab, el) {
-  if(tab === 'posh') renderPoshTab();
   document.querySelectorAll('.client-tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.client-panel').forEach(p => p.classList.remove('active'));
   el.classList.add('active');
@@ -1733,7 +1706,7 @@ function getTodayAlerts() {
   return a;
 }
 
-function closeModal(id){document.getElementById(id).classList.remove('open');}
+function closeModal(id){const el=document.getElementById(id);el.classList.remove('open');el.style.display='none';}
 document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
 
 function copyText(txt,msg){navigator.clipboard.writeText(txt).then(()=>showToast(msg||'Copied!')).catch(()=>showToast('Copy failed',true));}
@@ -1754,119 +1727,70 @@ function setLoading(show,text){
 // ══════════════════════════════════════════════════
 document.getElementById('login-pass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
 initLogin();
-
-// ══════════════════════════════════════════════════
-// LEADERBOARD
-// ══════════════════════════════════════════════════
-function renderLeaderboard() {
-  const medals = ['🥇','🥈','🥉'];
-  const rows = allMembers.map(m => {
-    const mLeads   = allLeads.filter(l => l.assigned_to === m.name);
-    const won      = mLeads.filter(l => l.status === 'Closed/Won').length;
-    const lost     = mLeads.filter(l => l.status === 'Lost').length;
-    const inprog   = mLeads.filter(l => !['Closed/Won','Lost'].includes(l.status)).length;
-    const bro      = allBrochures.filter(b => b.assigned_to === m.name && b.status === 'Sent').length;
-    const winRate  = mLeads.length ? Math.round(won/mLeads.length*100) : 0;
-    return { name: m.name, role: m.role, total: mLeads.length, won, lost, inprog, bro, winRate };
-  }).sort((a,b) => b.won - a.won || b.total - a.total);
-
-  // KPI cards
-  const topWinner = rows[0] || {};
-  const totalWon  = rows.reduce((s,r) => s+r.won, 0);
-  const totalLeads= rows.reduce((s,r) => s+r.total, 0);
-  document.getElementById('lb-kpis').innerHTML = `
-    <div class="stat-card accent"><div class="label">🏆 Top Closer</div><div class="value" style="font-size:18px;">${topWinner.name||'—'}</div><div class="sub">${topWinner.won||0} deals closed</div><div class="card-glow"></div></div>
-    <div class="stat-card" style="border-color:var(--green);background:var(--green-dim);"><div class="label" style="color:var(--green);">Team Won</div><div class="value" style="color:var(--green);">${totalWon}</div><div class="sub">total closed deals</div><div class="card-glow" style="background:var(--green);"></div></div>
-    <div class="stat-card blue"><div class="label">Team Pipeline</div><div class="value">${totalLeads}</div><div class="sub">total active leads</div><div class="card-glow"></div></div>`;
-
-  document.getElementById('lb-body').innerHTML = rows.map((r,i) => `<tr>
-    <td style="font-size:18px;">${medals[i]||i+1}</td>
-    <td><div style="font-weight:600;">${r.name}</div><div style="font-size:11px;color:var(--muted);">${r.role||''}</div></td>
-    <td style="font-family:var(--mono);font-size:15px;">${r.total}</td>
-    <td style="color:var(--green);font-family:var(--mono);font-size:15px;font-weight:600;">${r.won}</td>
-    <td style="color:var(--blue);font-family:var(--mono);">${r.inprog}</td>
-    <td style="color:var(--danger);font-family:var(--mono);">${r.lost}</td>
-    <td style="color:var(--text2);font-family:var(--mono);">${r.bro}</td>
-    <td><span style="font-family:var(--mono);color:${r.winRate>=50?'var(--green)':r.winRate>=25?'var(--warn)':'var(--danger)'};">${r.winRate}%</span></td>
-  </tr>`).join('') || '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:20px;">No data yet.</td></tr>';
-}
-
-// ══════════════════════════════════════════════════
-// MEETINGS
-// ══════════════════════════════════════════════════
-function renderMeetings() {
-  document.getElementById('meetings-body').innerHTML = allMeetings.length
-    ? allMeetings.map(m => `<tr>
-        <td style="font-family:var(--mono);font-size:12px;">${m.meeting_date||'—'}</td>
-        <td style="font-weight:600;">${m.company}</td>
-        <td style="font-size:12px;color:var(--text2);">${m.attendees||'—'}</td>
-        <td>${m.outcome ? `<span class="badge ${m.outcome.includes('Closed')||m.outcome.includes('Forward')?'badge-closed':m.outcome.includes('Not')?'badge-notint':'badge-warm'}">${m.outcome}</span>` : '—'}</td>
-        <td style="font-size:12px;color:var(--text2);max-width:200px;">${m.notes||'—'}</td>
-        <td style="font-size:12px;color:var(--cyan);">${m.next_steps||'—'}</td>
-        <td style="font-size:11px;color:var(--muted);">${m.logged_by||'—'}</td>
-      </tr>`).join('')
-    : '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px;">No meetings logged yet. Click "+ Log Meeting" to add one.</td></tr>';
-}
-
-async function saveMeeting() {
-  const company   = document.getElementById('mtg-company').value.trim();
-  if(!company) { showToast('Company required',true); return; }
-  const body = {
-    company,
-    meeting_date: document.getElementById('mtg-date').value || null,
-    attendees:    document.getElementById('mtg-attendees').value.trim(),
-    outcome:      document.getElementById('mtg-outcome').value,
-    notes:        document.getElementById('mtg-notes').value.trim(),
-    next_steps:   document.getElementById('mtg-nextsteps').value.trim(),
-    logged_by:    currentUser ? currentUser.name : 'Unknown'
-  };
-  try {
-    const result = await sb('meetings', { method:'POST', body });
-    allMeetings.unshift(...result);
-    closeModal('add-meeting-modal');
-    renderMeetings();
-    showToast('Meeting logged: '+company);
-    ['mtg-company','mtg-date','mtg-attendees','mtg-notes','mtg-nextsteps'].forEach(id => document.getElementById(id).value='');
-  } catch(e) { showToast('Failed to save meeting',true); }
-}
-
-// ══════════════════════════════════════════════════
-// POSH TRAINING TAB
-// ══════════════════════════════════════════════════
-function renderPoshTab() {
-  document.getElementById('posh-body').innerHTML = allPosh.length
-    ? allPosh.map(p => `<tr>
-        <td style="font-weight:600;">${p.company}</td>
-        <td style="font-size:12px;color:var(--text2);">${p.awareness_date||'—'}</td>
-        <td style="font-size:12px;color:var(--text2);">${p.icc_date||'—'}</td>
-        <td style="font-size:12px;color:var(--cyan);">${p.trainer||'—'}</td>
-      </tr>`).join('')
-    : '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:20px;">No POSH training records yet.</td></tr>';
-}
-
 </script>
 
-  <!-- ADD MEETING MODAL -->
-  <div class="modal-overlay" id="add-meeting-modal" onclick="if(event.target===this)closeModal('add-meeting-modal')">
-    <div class="modal" style="max-width:520px;">
-      <button class="modal-close" onclick="closeModal('add-meeting-modal')">✕</button>
-      <div class="modal-title">Log Meeting</div>
-      <div class="form-group"><label class="form-label">Company</label><input type="text" class="form-input" id="mtg-company" placeholder="Company name"/></div>
-      <div class="form-group"><label class="form-label">Meeting Date</label><input type="date" class="form-input" id="mtg-date"/></div>
-      <div class="form-group"><label class="form-label">Attendees</label><input type="text" class="form-input" id="mtg-attendees" placeholder="Names, roles…"/></div>
-      <div class="form-group"><label class="form-label">Outcome</label>
-        <select class="form-select" id="mtg-outcome">
-          <option>Positive — Moving Forward</option>
-          <option>Quotation Requested</option>
-          <option>Follow Up Required</option>
-          <option>Not Interested</option>
-          <option>Deal Closed</option>
-          <option>Rescheduled</option>
+  <!-- ADD BROCHURE MODAL -->
+  <div class="modal-overlay" id="add-brochure-modal" onclick="if(event.target===this)closeModal('add-brochure-modal')">
+    <div class="modal" style="max-width:480px;">
+      <button class="modal-close" onclick="closeModal('add-brochure-modal')">✕</button>
+      <div class="modal-title">Add Brochure Company</div>
+      <div class="form-group"><label class="form-label">Company Name *</label><input type="text" class="form-input" id="nb-company" placeholder="Company name"/></div>
+      <div class="form-group"><label class="form-label">Address</label><input type="text" class="form-input" id="nb-address" placeholder="Full address"/></div>
+      <div class="form-group"><label class="form-label">Area</label>
+        <select class="form-select" id="nb-area">
+          <option>Turbhe MIDC</option>
+          <option>Taloja MIDC</option>
+          <option>Dombivli MIDC</option>
+          <option>Mumbai</option>
+          <option>Navi Mumbai</option>
+          <option>Thane</option>
+          <option>Other</option>
         </select>
       </div>
-      <div class="form-group"><label class="form-label">Notes</label><textarea class="form-input" id="mtg-notes" rows="2" placeholder="What was discussed…" style="resize:vertical;"></textarea></div>
-      <div class="form-group"><label class="form-label">Next Steps</label><input type="text" class="form-input" id="mtg-nextsteps" placeholder="Action items…"/></div>
-      <button class="add-btn" style="width:100%;margin-top:8px;" onclick="saveMeeting()">Save Meeting</button>
+      <div class="form-group"><label class="form-label">Assign To</label>
+        <select class="form-select" id="nb-assignto"></select>
+      </div>
+      <div class="form-group"><label class="form-label">Status</label>
+        <select class="form-select" id="nb-status">
+          <option value="Pending">Pending</option>
+          <option value="Sent">Sent</option>
+        </select>
+      </div>
+      <button class="add-btn" style="width:100%;margin-top:8px;" onclick="saveBrochureCompany()">Save</button>
+    </div>
+  </div>
+
+  <!-- BULK BROCHURE IMPORT MODAL -->
+  <div class="modal-overlay" id="bulk-brochure-modal" onclick="if(event.target===this)closeModal('bulk-brochure-modal')">
+    <div class="modal" style="max-width:520px;">
+      <button class="modal-close" onclick="closeModal('bulk-brochure-modal')">✕</button>
+      <div class="modal-title">⬆ Bulk Import Companies</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:14px;">
+        Paste rows from Excel or enter one company per line.<br>
+        Format: <span style="font-family:var(--mono);color:var(--cyan);font-size:11px;">Company Name, Address, Area, Assigned To</span><br>
+        Area options: Turbhe MIDC / Taloja MIDC / Dombivli MIDC / Mumbai / Other<br>
+        <span style="color:var(--muted);">Address, Area, Assigned To are optional — defaults to Other / your name.</span>
+      </div>
+      <div class="form-group"><label class="form-label">Assign All To (default)</label>
+        <select class="form-select" id="bulk-assignto"></select>
+      </div>
+      <div class="form-group"><label class="form-label">Default Area</label>
+        <select class="form-select" id="bulk-area">
+          <option>Turbhe MIDC</option>
+          <option>Taloja MIDC</option>
+          <option>Dombivli MIDC</option>
+          <option>Mumbai</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Paste Data *</label>
+        <textarea class="form-input" id="bulk-data" rows="8" placeholder="Jaydev Chemical Industries, C-209 TTC MIDC Turbhe, Turbhe MIDC, Rohit Bhute&#10;Sunshine Laboratories, D-63 TTC MIDC Turbhe&#10;Industrial Glass Company" style="resize:vertical;font-family:var(--mono);font-size:12px;"></textarea>
+      </div>
+      <div id="bulk-preview" style="font-size:11px;color:var(--muted);margin-bottom:8px;"></div>
+      <div style="display:flex;gap:8px;">
+        <button class="add-btn" style="background:var(--surface2);border-color:var(--border2);color:var(--text2);flex:1;" onclick="previewBulkBrochure()">Preview</button>
+        <button class="add-btn" style="flex:1;" id="bulk-save-btn" onclick="saveBulkBrochure()" disabled>Import All</button>
+      </div>
     </div>
   </div>
 </body>
