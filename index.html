@@ -7,38 +7,38 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Syne+Mono&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #080b10;
-  --sidebar: #0c1018;
-  --surface: #111620;
-  --surface2: #161d2b;
-  --surface3: #1c2535;
-  --border: #1e2a3d;
-  --border2: #263347;
-  --green: #39ff9f;
-  --green-dim: rgba(57,255,159,0.08);
-  --green-glow: rgba(57,255,159,0.25);
-  --blue: #4b9eff;
-  --blue-dim: rgba(75,158,255,0.1);
-  --orange: #ff8c42;
-  --orange-dim: rgba(255,140,66,0.1);
-  --purple: #a78bfa;
-  --purple-dim: rgba(167,139,250,0.1);
-  --cyan: #22d3ee;
-  --cyan-dim: rgba(34,211,238,0.1);
-  --danger: #ff4d6d;
-  --danger-dim: rgba(255,77,109,0.1);
-  --warn: #fbbf24;
-  --success: #39ff9f;
-  --text: #e8edf5;
-  --text2: #7a8aa0;
-  --muted: #3d4f66;
+  --bg: #f1f5f9;
+  --sidebar: #ffffff;
+  --surface: #ffffff;
+  --surface2: #f8fafc;
+  --surface3: #f1f5f9;
+  --border: #e2e8f0;
+  --border2: #cbd5e1;
+  --green: #059669;
+  --green-dim: rgba(5,150,105,0.08);
+  --green-glow: rgba(5,150,105,0.2);
+  --blue: #2563eb;
+  --blue-dim: rgba(37,99,235,0.08);
+  --orange: #ea580c;
+  --orange-dim: rgba(234,88,12,0.08);
+  --purple: #7c3aed;
+  --purple-dim: rgba(124,58,237,0.08);
+  --cyan: #0891b2;
+  --cyan-dim: rgba(8,145,178,0.08);
+  --danger: #dc2626;
+  --danger-dim: rgba(220,38,38,0.08);
+  --warn: #d97706;
+  --success: #059669;
+  --text: #0f172a;
+  --text2: #475569;
+  --muted: #94a3b8;
   --font: 'Space Grotesk', sans-serif;
   --mono: 'Syne Mono', monospace;
   --r: 10px;
   --r-sm: 6px;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;min-height:100vh;display:flex;overflow:hidden;height:100vh;}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:16px;min-height:100vh;display:flex;overflow:hidden;height:100vh;}
 
 /* SCROLLBAR */
 ::-webkit-scrollbar{width:3px;height:3px;}
@@ -438,15 +438,26 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
     <!-- OVERVIEW -->
     <div class="panel active" id="panel-overview">
       <div id="pw-banner"></div>
+      <div style="font-size:13px;font-weight:700;color:var(--text2);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:12px;">APR 2026 — MAR 2027</div>
       <div class="grid-4">
-        <div class="stat-card accent"><div class="label">Total Leads</div><div class="value" id="ov-total">—</div><div class="sub">in pipeline</div><div class="card-glow"></div></div>
-        <div class="stat-card warn"><div class="label">Warm Leads</div><div class="value" id="ov-warm">—</div><div class="sub">responded</div><div class="card-glow"></div></div>
+        <div class="stat-card accent"><div class="label">Total Leads</div><div class="value" id="ov-total">—</div><div class="sub">monthly + one time</div><div class="card-glow"></div></div>
+        <div class="stat-card" style="border-color:var(--green);background:var(--green-dim);"><div class="label" style="color:var(--green);">Revenue Won</div><div class="value" id="ov-revenue" style="color:var(--green);font-size:20px;">—</div><div class="sub">from closed deals</div><div class="card-glow" style="background:var(--green);"></div></div>
         <div class="stat-card purple"><div class="label">High Priority</div><div class="value" id="ov-priority">—</div><div class="sub">need attention</div><div class="card-glow"></div></div>
         <div class="stat-card blue"><div class="label">Brochures Sent</div><div class="value" id="ov-brochures">—</div><div class="sub">of 100 weekly target</div><div class="card-glow"></div></div>
       </div>
+      <div class="card" style="padding:14px 14px 10px;margin-bottom:10px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div class="section-title">📋 Monthly Compliance Pipeline</div>
+          <span style="font-size:12px;color:var(--muted);" id="monthly-rev-label"></span>
+        </div>
+        <div class="pipeline-kanban" id="pipeline-kanban-monthly"></div>
+      </div>
       <div class="card" style="padding:14px 14px 10px;">
-        <div class="section-title" style="margin-bottom:12px;">Pipeline Kanban</div>
-        <div class="pipeline-kanban" id="pipeline-kanban"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div class="section-title">⚡ One Time Activity Pipeline</div>
+          <span style="font-size:12px;color:var(--muted);" id="onetime-rev-label"></span>
+        </div>
+        <div class="pipeline-kanban" id="pipeline-kanban-onetime"></div>
       </div>
       <div class="grid-2">
         <div class="card"><div class="section-title">Stage Breakdown</div><div id="pipeline-bars"></div></div>
@@ -479,8 +490,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
           <option value="Quotation">Quotation Sent</option>
           <option value="Meeting Scheduled">Meeting Scheduled</option>
           <option value="Not Interested">Not Interested</option>
-          <option value="Closed/Won">Closed / Won (Monthly)</option>
-          <option value="Closed/Won - One Time">Closed / Won (One Time)</option>
+          <option value="Closed/Won">Closed / Won</option>
           <option value="Sent">Sent</option>
         </select>
         <select id="owner-filter" onchange="renderLeads()" style="display:none;"></select>
@@ -1105,25 +1115,42 @@ function switchView(member, el) {
 function renderOverview() {
   const leads    = getFilteredLeads();
   const brochures = getFilteredBrochures();
-  const warm  = leads.filter(l => ['Responded','Meeting Scheduled','In Progress','Follow Up'].includes(l.status)).length;
   const prio  = leads.filter(l => l.priority === 'High').length;
   const sentB = brochures.filter(b => b.status === 'Sent' || b.status === 'Dispatched').length;
   const broP  = Math.min(100, Math.round(sentB/100*100));
 
+  // Revenue from won deals in sales_clients
+  const mcRev = (allClients||[]).filter(c=>c.client_type==='Monthly Compliance').reduce((s,c)=>s+(parseFloat(c.annual_fees)||0),0);
+  const otRev = (allClients||[]).filter(c=>c.client_type==='One Time').reduce((s,c)=>s+(parseFloat(c.annual_fees)||0),0);
+  const totalRev = mcRev + otRev;
+  const revStr = totalRev >= 100000 ? '₹'+(totalRev/100000).toFixed(1)+'L' : totalRev >= 1000 ? '₹'+(totalRev/1000).toFixed(0)+'K' : '₹'+totalRev;
+
   document.getElementById('ov-total').textContent = leads.length;
-  document.getElementById('ov-warm').textContent  = warm;
+  document.getElementById('ov-revenue').textContent = revStr;
   document.getElementById('ov-priority').textContent = prio;
   document.getElementById('ov-brochures').textContent = sentB;
   document.getElementById('ov-bro-count').textContent = sentB;
   document.getElementById('ov-bro-bar').style.width = broP + '%';
   document.getElementById('ov-bro-pct').textContent  = broP + '% complete';
 
-  renderKanban(leads);
+  // Dual pipeline kanbans
+  const monthlyLeads = leads.filter(l => (l.activity_type||'').toLowerCase().includes('month') || (!l.activity_type && !['one time','one-time','onetime'].includes((l.activity_type||'').toLowerCase())));
+  const oneTimeLeads = leads.filter(l => (l.activity_type||'').toLowerCase().includes('one'));
+  renderKanban(monthlyLeads, 'pipeline-kanban-monthly');
+  renderKanban(oneTimeLeads, 'pipeline-kanban-onetime');
+
+  // Revenue labels
+  const mcRevStr = mcRev >= 100000 ? '₹'+(mcRev/100000).toFixed(1)+'L won' : mcRev > 0 ? '₹'+(mcRev/1000).toFixed(0)+'K won' : '';
+  const otRevStr = otRev >= 100000 ? '₹'+(otRev/100000).toFixed(1)+'L won' : otRev > 0 ? '₹'+(otRev/1000).toFixed(0)+'K won' : '';
+  const mlEl = document.getElementById('monthly-rev-label');
+  const olEl = document.getElementById('onetime-rev-label');
+  if(mlEl) mlEl.textContent = mcRevStr;
+  if(olEl) olEl.textContent = otRevStr;
 
   const stages = [
     {k:'New Lead',c:'#6366f1'},{k:'Not Responded',c:'#f59e0b'},{k:'Sent',c:'#60a5fa'},
     {k:'Responded',c:'#f97316'},{k:'Quotation',c:'#22d3ee'},{k:'Meeting Scheduled',c:'#ef4444'},
-    {k:'Not Interested',c:'#475569'},{k:'Lost',c:'#ff4d6d'},{k:'Closed/Won',c:'#39ff9f'},{k:'Closed/Won - One Time',c:'#00e5ff'}
+    {k:'Not Interested',c:'#475569'},{k:'Closed/Won',c:'#39ff9f'}
   ];
   document.getElementById('pipeline-bars').innerHTML = stages.map(s => {
     const n = leads.filter(l => l.status === s.k).length;
@@ -1165,22 +1192,34 @@ const PIPELINE_COLS = [
 
 let dragLeadId = null;
 
-function renderKanban(leads) {
-  document.getElementById('pipeline-kanban').innerHTML = PIPELINE_COLS.map(col => {
+function renderKanban(leads, targetId) {
+  const el = document.getElementById(targetId || 'pipeline-kanban-monthly');
+  if(!el) return;
+  el.innerHTML = PIPELINE_COLS.map(col => {
     const colLeads = leads.filter(l => l.status === col.key);
+    // Revenue for won column
+    const colRev = col.key === 'Closed/Won'
+      ? colLeads.reduce((s,l) => s + (parseFloat(l.annual_fees)||parseFloat(l.quoted_fees)||0), 0)
+      : 0;
+    const revLabel = colRev > 0 ? `<span style="font-size:10px;color:${col.color};font-family:var(--mono);">₹${colRev>=100000?(colRev/100000).toFixed(1)+'L':colRev>=1000?(colRev/1000).toFixed(0)+'K':colRev}</span>` : '';
     const cards = colLeads.length
       ? colLeads.map(l => {
           const ownerColor = getMemberColor(l.assigned_to);
+          const feeStr = l.annual_fees || l.quoted_fees ? `<div style="font-size:10px;color:var(--green);font-family:var(--mono);margin-top:2px;">₹${parseFloat(l.annual_fees||l.quoted_fees||0).toLocaleString('en-IN')}</div>` : '';
           return `<div class="pipeline-card" draggable="true" data-id="${l.id}" onclick="openContactModal('${l.id}')" ondragstart="onDragStart(event,'${l.id}')" ondragend="onDragEnd(event)">
             <div class="co">${l.priority==='High'?'<span class="prio-dot"></span>':''}${l.company}</div>
+            ${feeStr}
             <div class="ct"><span class="owner-dot" style="background:${ownerColor};"></span>${(l.assigned_to||'').split(' ')[0]}</div>
           </div>`;
         }).join('')
       : '<div class="pipeline-empty">Drop here</div>';
-    return `<div class="pipeline-col" data-col="${col.key}" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event,'${col.key}')">
+    return `<div class="pipeline-col" data-col="${col.key}" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event,'${col.key}','${targetId||'monthly'}')">
       <div class="pipeline-col-header">
         <span class="pipeline-col-title" style="color:${col.color};">${col.label}</span>
-        <span class="pipeline-col-count" style="background:${col.bg};color:${col.color};">${colLeads.length}</span>
+        <div style="display:flex;align-items:center;gap:4px;">
+          ${revLabel}
+          <span class="pipeline-col-count" style="background:${col.bg};color:${col.color};">${colLeads.length}</span>
+        </div>
       </div>
       <div class="pipeline-col-body">${cards}</div>
     </div>`;
@@ -1191,12 +1230,15 @@ function onDragStart(e,id){dragLeadId=id;e.dataTransfer.setData('text/plain',id)
 function onDragEnd(e){e.target.classList.remove('dragging');document.querySelectorAll('.pipeline-col').forEach(c=>c.classList.remove('drag-over'));dragLeadId=null;}
 function onDragOver(e){e.preventDefault();e.currentTarget.classList.add('drag-over');}
 function onDragLeave(e){if(!e.currentTarget.contains(e.relatedTarget))e.currentTarget.classList.remove('drag-over');}
-async function onDrop(e,newStatus){
+async function onDrop(e,newStatus,pipelineType){
   e.preventDefault();e.currentTarget.classList.remove('drag-over');
   const id=e.dataTransfer.getData('text/plain');if(!id)return;
   const lead=allLeads.find(l=>l.id===id);if(!lead||lead.status===newStatus)return;
+  // If dropped into other pipeline, update activity_type too
+  if(pipelineType==='onetime' && !(lead.activity_type||'').toLowerCase().includes('one')) lead.activity_type='One Time';
+  if(pipelineType==='monthly' && (lead.activity_type||'').toLowerCase().includes('one')) lead.activity_type='Monthly';
   lead.status=newStatus;renderOverview();
-  try{await sbPatch('leads','id=eq.'+id,{status:newStatus});showToast('Stage → '+newStatus);}
+  try{await sbPatch('leads','id=eq.'+id,{status:newStatus,activity_type:lead.activity_type});showToast('Stage → '+newStatus);}
   catch(err){showToast('Update failed',true);}
 }
 
@@ -1204,7 +1246,7 @@ async function onDrop(e,newStatus){
 // LEADS TABLE
 // ══════════════════════════════════════════════════
 function statusBadge(s) {
-  const map = {'New Lead':'badge-new','Not Responded':'badge-contacted','Sent':'badge-contacted','Responded':'badge-warm','Quotation':'badge-quotation','Meeting Scheduled':'badge-hot','Closed/Won':'badge-closed','Closed/Won - One Time':'badge-closed','Won':'badge-closed','Lost':'badge-notint','Not Interested':'badge-notint','In Progress':'badge-warm','Follow Up':'badge-quotation','On Hold':'badge-contacted'};
+  const map = {'New Lead':'badge-new','Not Responded':'badge-contacted','Sent':'badge-contacted','Responded':'badge-warm','Quotation':'badge-quotation','Meeting Scheduled':'badge-hot','Closed/Won':'badge-closed','Not Interested':'badge-notint'};
   return `<span class="badge ${map[s]||'badge-new'}">${s}</span>`;
 }
 
@@ -1235,7 +1277,7 @@ function renderLeads() {
       <td>${statusBadge(l.status)}</td>
       <td>${l.priority==='High'?'<span class="badge badge-priority">★ High</span>':l.priority||'—'}</td>
       <td><div style="display:flex;align-items:center;gap:6px;"><div style="width:20px;height:20px;border-radius:50%;background:${ownerColor};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#080b10;flex-shrink:0;">${initials}</div><span style="font-size:12px;color:var(--text2);">${(l.assigned_to||'').split(' ')[0]}</span></div></td>
-      <td><select class="stage-select" onchange="updateLeadStatus('${l.id}',this.value)">${['New Lead','Not Responded','Sent','Responded','Quotation','Meeting Scheduled','In Progress','Follow Up','On Hold','Not Interested','Lost','Closed/Won','Closed/Won - One Time'].map(s=>`<option ${l.status===s?'selected':''}>${s}</option>`).join('')}</select></td>
+      <td><select class="stage-select" onchange="updateLeadStatus('${l.id}',this.value)">${['New Lead','Not Responded','Sent','Responded','Quotation','Meeting Scheduled','Not Interested','Closed/Won'].map(s=>`<option ${l.status===s?'selected':''}>${s}</option>`).join('')}</select></td>
       <td><button class="contact-btn" onclick="openContactModal('${l.id}')">Contact</button></td>
     </tr>`;
   }).join('');
