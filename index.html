@@ -296,6 +296,30 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:16
 .add-followup input:focus{outline:none;border-color:var(--green);}
 .add-btn{background:var(--green);border:none;color:#080b10;font-family:var(--mono);font-size:12px;font-weight:700;padding:8px 15px;border-radius:var(--r-sm);cursor:pointer;transition:all .2s;}
 .add-btn:hover{background:#5fffb8;}
+.import-tabs{display:flex;gap:0;border:1px solid var(--border);border-radius:var(--r-sm);overflow:hidden;margin-bottom:16px;}
+.import-tab{flex:1;padding:9px 16px;font-size:12px;font-weight:600;cursor:pointer;text-align:center;background:var(--surface2);color:var(--muted);border:none;transition:all .2s;font-family:var(--font);}
+.import-tab.active{background:var(--surface3);color:var(--green);box-shadow:inset 0 -2px 0 var(--green);}
+.import-tab:hover:not(.active){color:var(--text);}
+.import-panel{display:none;}
+.import-panel.active{display:block;}
+.import-field-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;}
+.import-textarea{width:100%;background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-family:var(--mono);font-size:12px;padding:8px 10px;border-radius:var(--r-sm);resize:vertical;min-height:100px;line-height:1.6;transition:border-color .2s;}
+.import-textarea:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px var(--green-dim);}
+.import-col-label{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-bottom:5px;display:flex;align-items:center;gap:5px;}
+.import-col-label .req-dot{width:5px;height:5px;border-radius:50%;background:var(--green);flex-shrink:0;}
+.csv-drop-zone{border:2px dashed var(--border2);border-radius:var(--r);padding:32px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:14px;}
+.csv-drop-zone:hover,.csv-drop-zone.drag-over{border-color:var(--green);background:var(--green-dim);}
+.csv-drop-icon{font-size:28px;margin-bottom:8px;}
+.sql-output-box{background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r-sm);padding:14px;font-family:var(--mono);font-size:11px;line-height:1.7;max-height:260px;overflow-y:auto;white-space:pre;color:var(--text);margin-top:12px;word-break:break-all;}
+.import-run-btn{background:var(--green);border:none;color:#080b10;font-family:var(--font);font-size:13px;font-weight:700;padding:10px 22px;border-radius:var(--r-sm);cursor:pointer;transition:all .2s;box-shadow:0 2px 12px var(--green-glow);}
+.import-run-btn:hover{background:#5fffb8;}
+.import-run-btn.cyan{background:var(--cyan);box-shadow:0 2px 12px rgba(8,145,178,.3);}
+.import-run-btn.cyan:hover{background:#22d3ee;}
+.col-chip{display:inline-flex;align-items:center;gap:4px;font-size:10px;padding:2px 8px;border-radius:20px;border:1px solid var(--border2);color:var(--text2);background:var(--surface2);font-family:var(--mono);}
+.col-chip.req{border-color:rgba(5,150,105,.4);color:var(--green);background:var(--green-dim);}
+.import-result-banner{padding:10px 14px;border-radius:var(--r-sm);font-size:12px;margin-top:10px;display:none;font-family:var(--mono);}
+.import-result-banner.ok{background:var(--green-dim);color:var(--green);border:1px solid rgba(5,150,105,.3);}
+.import-result-banner.err{background:var(--danger-dim);color:var(--danger);border:1px solid rgba(220,38,38,.3);}
 .manager-only{display:none;}
 </style>
 </head>
@@ -355,6 +379,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:16
     <div class="sidebar-section-label">Logs</div>
     <div class="nav-item" onclick="navTo('journal',this)"><span class="nav-icon">✎</span>Journal</div>
     <div class="nav-item" id="notif-nav" onclick="navTo('notifications',this)"><span class="nav-icon">🔔</span>Notifications<span class="nav-badge" id="notif-badge" style="display:none;">0</span></div>
+    <div class="nav-item manager-only" onclick="navTo('import',this)"><span class="nav-icon">⬆</span>Import Data<span style="font-size:9px;color:var(--muted);margin-left:auto;font-family:var(--mono);">MGR</span></div>
   </div>
   <div class="sidebar-bottom">
     <div class="user-chip" id="user-chip">
@@ -595,8 +620,145 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:16
       <div class="section-title">Your Notifications</div>
       <div id="notif-list"><div style="color:var(--muted);font-size:13px;padding:10px 0;">Loading notifications…</div></div>
     </div>
-  </div>
-</div>
+
+    <!-- IMPORT DATA (manager only) -->
+    <div class="panel" id="panel-import">
+      <div style="margin-bottom:14px;font-size:13px;color:var(--muted);line-height:1.6;">Paste columns directly from Excel or upload a CSV/TSV file. The tool generates SQL you can run in Supabase — or push directly to the database using the <strong>Push to DB</strong> button.</div>
+
+      <div class="import-tabs">
+        <button class="import-tab active" onclick="switchImportTab('mc',this)">📋 Monthly Compliance</button>
+        <button class="import-tab" onclick="switchImportTab('ot',this)">⚡ One Time</button>
+        <button class="import-tab" onclick="switchImportTab('posh',this)">🛡 POSH</button>
+        <button class="import-tab" onclick="switchImportTab('brochure',this)">✉ Brochure</button>
+        <button class="import-tab" onclick="switchImportTab('csv',this)">📁 CSV Upload</button>
+      </div>
+
+      <!-- MONTHLY COMPLIANCE PASTE -->
+      <div class="import-panel active" id="imp-mc">
+        <div class="card">
+          <div class="section-title">Paste columns from Excel</div>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.6;">Copy each column from your sheet → paste below. One company per line. Rows align by position.</p>
+          <div class="import-field-grid">
+            <div><div class="import-col-label"><span class="req-dot"></span>Company Name</div><textarea class="import-textarea" id="mc-company" placeholder="Flipspaces&#10;Knockout Agency&#10;Vologo Infotech&#10;..."></textarea></div>
+            <div><div class="import-col-label">Scope of Work</div><textarea class="import-textarea" id="mc-scope" placeholder="Comprehensive Compliance&#10;Payroll Only&#10;..."></textarea></div>
+            <div><div class="import-col-label">Annual Fees (₹)</div><textarea class="import-textarea" id="mc-fees" placeholder="480000&#10;60000&#10;55200&#10;..."></textarea></div>
+            <div><div class="import-col-label">Lead Owner</div><textarea class="import-textarea" id="mc-owner" placeholder="Gaurav&#10;Priyanka&#10;..."></textarea></div>
+            <div><div class="import-col-label">Work Status</div><textarea class="import-textarea" id="mc-wstatus" placeholder="WIP&#10;Done&#10;..."></textarea></div>
+            <div><div class="import-col-label">Payment Received</div><textarea class="import-textarea" id="mc-payment" placeholder="Yes&#10;No&#10;Received&#10;..."></textarea></div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <button class="import-run-btn" onclick="genImportSQL('mc')">Preview SQL</button>
+            <button class="import-run-btn cyan" onclick="pushImportToDB('mc')">Push to DB ↑</button>
+            <button class="refresh-btn" onclick="clearImport('mc')">Clear</button>
+            <span id="mc-row-count" style="font-size:12px;color:var(--muted);font-family:var(--mono);"></span>
+          </div>
+          <div class="import-result-banner" id="mc-result"></div>
+          <div class="sql-output-box" id="mc-sql" style="display:none;"></div>
+        </div>
+      </div>
+
+      <!-- ONE TIME PASTE -->
+      <div class="import-panel" id="imp-ot">
+        <div class="card">
+          <div class="section-title">Paste columns from Excel</div>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.6;">Copy each column from your One Time Activity sheet.</p>
+          <div class="import-field-grid">
+            <div><div class="import-col-label"><span class="req-dot"></span>Company Name</div><textarea class="import-textarea" id="ot-company" placeholder="Rajadhayaksha Sarees&#10;FYNX&#10;..."></textarea></div>
+            <div><div class="import-col-label">Scope / Activity</div><textarea class="import-textarea" id="ot-scope" placeholder="S&E Registration&#10;POSH Training&#10;..."></textarea></div>
+            <div><div class="import-col-label">One-Time Fees (₹)</div><textarea class="import-textarea" id="ot-fees" placeholder="45000&#10;30000&#10;..."></textarea></div>
+            <div><div class="import-col-label">Lead Owner</div><textarea class="import-textarea" id="ot-owner" placeholder="Gaurav&#10;Priyanka&#10;..."></textarea></div>
+            <div><div class="import-col-label">Work Status</div><textarea class="import-textarea" id="ot-wstatus" placeholder="Done&#10;WIP&#10;..."></textarea></div>
+            <div><div class="import-col-label">Payment / Invoice</div><textarea class="import-textarea" id="ot-payment" placeholder="Paid&#10;Invoice sent&#10;Pending&#10;..."></textarea></div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <button class="import-run-btn" onclick="genImportSQL('ot')">Preview SQL</button>
+            <button class="import-run-btn cyan" onclick="pushImportToDB('ot')">Push to DB ↑</button>
+            <button class="refresh-btn" onclick="clearImport('ot')">Clear</button>
+            <span id="ot-row-count" style="font-size:12px;color:var(--muted);font-family:var(--mono);"></span>
+          </div>
+          <div class="import-result-banner" id="ot-result"></div>
+          <div class="sql-output-box" id="ot-sql" style="display:none;"></div>
+        </div>
+      </div>
+
+      <!-- POSH PASTE -->
+      <div class="import-panel" id="imp-posh">
+        <div class="card">
+          <div class="section-title">Paste columns from Excel</div>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.6;">Copy each column from your POSH Training sheet.</p>
+          <div class="import-field-grid">
+            <div><div class="import-col-label"><span class="req-dot"></span>Company Name</div><textarea class="import-textarea" id="posh-company" placeholder="ABN Edge&#10;Kidloland&#10;Steer Advisory&#10;..."></textarea></div>
+            <div><div class="import-col-label">Trainer / Owner</div><textarea class="import-textarea" id="posh-owner" placeholder="Priyanka&#10;..."></textarea></div>
+            <div><div class="import-col-label">Work Status</div><textarea class="import-textarea" id="posh-wstatus" placeholder="Awareness: Done | ICC: Done&#10;..."></textarea></div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <button class="import-run-btn" onclick="genImportSQL('posh')">Preview SQL</button>
+            <button class="import-run-btn cyan" onclick="pushImportToDB('posh')">Push to DB ↑</button>
+            <button class="refresh-btn" onclick="clearImport('posh')">Clear</button>
+            <span id="posh-row-count" style="font-size:12px;color:var(--muted);font-family:var(--mono);"></span>
+          </div>
+          <div class="import-result-banner" id="posh-result"></div>
+          <div class="sql-output-box" id="posh-sql" style="display:none;"></div>
+        </div>
+      </div>
+
+      <!-- BROCHURE PASTE -->
+      <div class="import-panel" id="imp-brochure">
+        <div class="card">
+          <div class="section-title">Paste columns from Excel</div>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.6;">Copy each column from your Brochure Tracker sheet.</p>
+          <div class="import-field-grid">
+            <div><div class="import-col-label"><span class="req-dot"></span>Company Name</div><textarea class="import-textarea" id="bro-company" placeholder="Acme Pharma Pvt Ltd&#10;..."></textarea></div>
+            <div><div class="import-col-label"><span class="req-dot"></span>MIDC Area</div><textarea class="import-textarea" id="bro-area" placeholder="Turbhe MIDC&#10;Taloja MIDC&#10;Dombivli MIDC&#10;..."></textarea></div>
+            <div><div class="import-col-label">Address</div><textarea class="import-textarea" id="bro-address" placeholder="Plot 12, Sector 4&#10;..."></textarea></div>
+            <div><div class="import-col-label">Assigned To</div><textarea class="import-textarea" id="bro-owner" placeholder="Rohit&#10;Gaurav&#10;..."></textarea></div>
+            <div><div class="import-col-label">Status (Pending/Sent)</div><textarea class="import-textarea" id="bro-status" placeholder="Pending&#10;Sent&#10;..."></textarea></div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <button class="import-run-btn" onclick="genImportSQL('brochure')">Preview SQL</button>
+            <button class="import-run-btn cyan" onclick="pushImportToDB('brochure')">Push to DB ↑</button>
+            <button class="refresh-btn" onclick="clearImport('brochure')">Clear</button>
+            <span id="brochure-row-count" style="font-size:12px;color:var(--muted);font-family:var(--mono);"></span>
+          </div>
+          <div class="import-result-banner" id="brochure-result"></div>
+          <div class="sql-output-box" id="brochure-sql" style="display:none;"></div>
+        </div>
+      </div>
+
+      <!-- CSV UPLOAD -->
+      <div class="import-panel" id="imp-csv">
+        <div class="card">
+          <div class="section-title">Upload CSV or TSV File</div>
+          <div style="margin-bottom:14px;">
+            <label class="form-label" style="margin-bottom:6px;display:block;">What are you importing?</label>
+            <select class="form-select" id="csv-import-type" style="max-width:280px;">
+              <option value="mc">Monthly Compliance clients</option>
+              <option value="ot">One Time Activity clients</option>
+              <option value="posh">POSH Training clients</option>
+              <option value="brochure">Brochure Tracker</option>
+            </select>
+          </div>
+          <div style="margin-bottom:10px;font-size:11px;color:var(--muted);">
+            Expected columns: <span id="csv-expected-cols"></span>
+          </div>
+          <div class="csv-drop-zone" id="csv-drop-zone" onclick="document.getElementById('csv-file-input').click()" ondragover="csvDragOver(event)" ondragleave="csvDragLeave(event)" ondrop="csvFileDrop(event)">
+            <input type="file" id="csv-file-input" accept=".csv,.tsv,.txt" style="display:none;" onchange="csvFileSelect(event)">
+            <div class="csv-drop-icon">📂</div>
+            <div style="font-size:13px;color:var(--text2);font-weight:600;">Drop CSV / TSV here or click to browse</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:5px;">Tab-separated Excel exports also work</div>
+          </div>
+          <div id="csv-preview-wrap" style="display:none;overflow-x:auto;margin-bottom:12px;"></div>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <button class="import-run-btn cyan" id="csv-push-btn" onclick="pushCSVToDB()" style="display:none;">Push to DB ↑</button>
+            <button class="refresh-btn" id="csv-copy-btn" onclick="copyImportSQL('csv-sql')" style="display:none;">Copy SQL</button>
+            <span id="csv-row-count" style="font-size:12px;color:var(--muted);font-family:var(--mono);"></span>
+          </div>
+          <div class="import-result-banner" id="csv-result"></div>
+          <div class="sql-output-box" id="csv-sql" style="display:none;"></div>
+        </div>
+      </div>
+
+    </div>
 
 <!-- CONTACT MODAL -->
 <div class="modal-overlay" id="contact-modal">
@@ -891,7 +1053,7 @@ function setSyncStatus(state) {
   text.textContent=state==='live'?'Live · '+now:state==='offline'?'Offline':'Syncing…';
 }
 
-const PAGE_TITLES={overview:'Overview',leads:'Leads Tracker',brochure:'Brochure Tracker',analytics:'Analytics',team:'Team View',clients:'Sales Clients',followups:'Follow Ups',pitch:"Today's Pitch",journal:'Journal',notifications:'Notifications'};
+const PAGE_TITLES={overview:'Overview',leads:'Leads Tracker',brochure:'Brochure Tracker',analytics:'Analytics',team:'Team View',clients:'Sales Clients',followups:'Follow Ups',pitch:"Today's Pitch",journal:'Journal',notifications:'Notifications',import:'Import Data'};
 
 function navTo(name,el) {
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
@@ -900,7 +1062,7 @@ function navTo(name,el) {
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   const panel=document.getElementById('panel-'+name);
   if(panel)panel.classList.add('active');
-  const renders={overview:renderOverview,leads:renderLeads,brochure:renderBrochure,analytics:renderAnalytics,team:renderTeam,clients:renderClients,followups:renderFollowUps,pitch:renderPitch,journal:renderJournal,notifications:renderNotifications};
+  const renders={overview:renderOverview,leads:renderLeads,brochure:renderBrochure,analytics:renderAnalytics,team:renderTeam,clients:renderClients,followups:renderFollowUps,pitch:renderPitch,journal:renderJournal,notifications:renderNotifications,import:renderImport};
   if(renders[name])renders[name]();
 }
 
@@ -1345,6 +1507,246 @@ document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click
 function copyText(txt,msg){navigator.clipboard.writeText(txt).then(()=>showToast(msg||'Copied!')).catch(()=>showToast('Copy failed',true));}
 function showToast(msg,isErr){const t=document.getElementById('toast');t.textContent=msg;t.className='toast'+(isErr?' error':'');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
 function setLoading(show,text){document.getElementById('loading-overlay').className='loading-overlay'+(show?' show':'');if(text)document.getElementById('loading-text').textContent=text;}
+
+// ══════════════════════════════════════════════════
+// IMPORT DATA
+// ══════════════════════════════════════════════════
+const IMPORT_SCHEMAS = {
+  mc:      { table:'sales_clients', clientType:'Monthly Compliance', fields:['company','scope','annual_fees','lead_owner','work_status','payment_received'], numericFields:['annual_fees'] },
+  ot:      { table:'sales_clients', clientType:'One Time',           fields:['company','scope','annual_fees','lead_owner','work_status','payment_received'], numericFields:['annual_fees'] },
+  posh:    { table:'sales_clients', clientType:'POSH Training',      fields:['company','lead_owner','work_status'], numericFields:[] },
+  brochure:{ table:'brochure_tracker', clientType:null,              fields:['company','area','address','assigned_to','status'], numericFields:[] },
+};
+
+const CSV_EXPECTED = {
+  mc:      'company, scope, annual_fees, lead_owner, work_status, payment_received',
+  ot:      'company, scope, annual_fees, lead_owner, work_status, payment_received',
+  posh:    'company, lead_owner, work_status',
+  brochure:'company, area, address, assigned_to, status',
+};
+
+let csvParsedRows = [];
+let csvParsedSchema = null;
+
+function renderImport() {
+  updateCSVExpected();
+}
+
+function switchImportTab(name, el) {
+  document.querySelectorAll('.import-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.import-panel').forEach(p=>p.classList.remove('active'));
+  if(el) el.classList.add('active');
+  document.getElementById('imp-'+name).classList.add('active');
+  if(name==='csv') updateCSVExpected();
+}
+
+function getImportLines(id) {
+  const el = document.getElementById(id);
+  if(!el) return [];
+  return el.value.split('\n').map(l=>l.trim()).filter(l=>l && l!=='-' && l.toLowerCase()!=='n/a' && l.toLowerCase()!=='na' && l!=='');
+}
+
+function escSQL(v) {
+  if(v===null||v===undefined||v==='') return 'NULL';
+  return "'"+String(v).replace(/'/g,"''")+"'";
+}
+function escNum(v) {
+  if(!v||v===''||v==='-'||isNaN(parseFloat(String(v).replace(/,/g,'')))) return 'NULL';
+  return String(parseFloat(String(v).replace(/,/g,'')));
+}
+
+function buildImportRows(type) {
+  const schema = IMPORT_SCHEMAS[type];
+  const prefix = type === 'mc' ? 'mc' : type === 'ot' ? 'ot' : type === 'posh' ? 'posh' : 'bro';
+  const fieldIds = {
+    mc:      ['mc-company','mc-scope','mc-fees','mc-owner','mc-wstatus','mc-payment'],
+    ot:      ['ot-company','ot-scope','ot-fees','ot-owner','ot-wstatus','ot-payment'],
+    posh:    ['posh-company','posh-owner','posh-wstatus'],
+    brochure:['bro-company','bro-area','bro-address','bro-owner','bro-status'],
+  };
+  const ids = fieldIds[type];
+  const cols = ids.map(id => getImportLines(id));
+  const companyLines = cols[0];
+  if(!companyLines.length) return [];
+  const numRows = companyLines.length;
+  return Array.from({length:numRows}, (_,i) => {
+    const row = {};
+    schema.fields.forEach((f,fi) => { row[f] = (cols[fi]||[])[i] || null; });
+    return row;
+  });
+}
+
+function buildImportSQL(type, rows) {
+  const schema = IMPORT_SCHEMAS[type];
+  const colNames = schema.clientType ? ['client_type',...schema.fields] : schema.fields;
+  const vals = rows.map(row => {
+    const parts = schema.clientType ? [escSQL(schema.clientType)] : [];
+    schema.fields.forEach(f => {
+      parts.push(schema.numericFields.includes(f) ? escNum(row[f]) : escSQL(row[f]));
+    });
+    return '('+parts.join(', ')+')';
+  });
+  return `INSERT INTO ${schema.table} (${colNames.join(', ')})\nVALUES\n${vals.join(',\n')};`;
+}
+
+function genImportSQL(type) {
+  const rows = buildImportRows(type);
+  const sqlEl = document.getElementById(type+'-sql');
+  const countEl = document.getElementById(type+'-row-count');
+  if(!rows.length) { showToast('Paste company names first', true); return; }
+  countEl.textContent = rows.length+' rows ready';
+  sqlEl.textContent = buildImportSQL(type, rows);
+  sqlEl.style.display = 'block';
+}
+
+function copyImportSQL(elId) {
+  const txt = document.getElementById(elId).textContent;
+  if(!txt) { showToast('Generate SQL first', true); return; }
+  navigator.clipboard.writeText(txt).then(()=>showToast('SQL copied to clipboard!'));
+}
+
+function clearImport(type) {
+  const fieldIds = {
+    mc:['mc-company','mc-scope','mc-fees','mc-owner','mc-wstatus','mc-payment'],
+    ot:['ot-company','ot-scope','ot-fees','ot-owner','ot-wstatus','ot-payment'],
+    posh:['posh-company','posh-owner','posh-wstatus'],
+    brochure:['bro-company','bro-area','bro-address','bro-owner','bro-status'],
+  };
+  (fieldIds[type]||[]).forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const sqlEl=document.getElementById(type+'-sql');if(sqlEl){sqlEl.style.display='none';sqlEl.textContent='';}
+  const countEl=document.getElementById(type+'-row-count');if(countEl)countEl.textContent='';
+  const res=document.getElementById(type+'-result');if(res)res.style.display='none';
+}
+
+async function pushImportToDB(type) {
+  const rows = buildImportRows(type);
+  if(!rows.length) { showToast('Paste company names first', true); return; }
+  const schema = IMPORT_SCHEMAS[type];
+  const resultEl = document.getElementById(type+'-result');
+  resultEl.style.display='none';
+  setLoading(true, 'Importing '+rows.length+' rows…');
+  let ok=0, fail=0;
+  for(const row of rows) {
+    const body = schema.clientType ? {client_type:schema.clientType,...row} : {...row};
+    // Remove null values to avoid inserting nulls where not needed
+    Object.keys(body).forEach(k=>{ if(body[k]===null||body[k]==='') delete body[k]; });
+    // Fix numeric fields
+    schema.numericFields.forEach(f=>{ if(body[f]) body[f]=parseFloat(String(body[f]).replace(/,/g,''))||null; if(!body[f]) delete body[f]; });
+    try {
+      await sb(schema.table, {method:'POST', body});
+      ok++;
+    } catch(e) { fail++; console.error('Row fail:',row,e); }
+  }
+  setLoading(false);
+  resultEl.className = 'import-result-banner '+(fail===0?'ok':'err');
+  resultEl.textContent = fail===0 ? `✓ ${ok} rows imported successfully!` : `✓ ${ok} imported, ✗ ${fail} failed — check console for errors`;
+  resultEl.style.display='block';
+  if(ok>0) { showToast(ok+' rows imported!'); loadData(); }
+}
+
+// CSV UPLOAD
+function updateCSVExpected() {
+  const type = document.getElementById('csv-import-type')?document.getElementById('csv-import-type').value:'mc';
+  const el=document.getElementById('csv-expected-cols');
+  if(el) el.innerHTML=(CSV_EXPECTED[type]||'').split(',').map(c=>`<span class="col-chip">${c.trim()}</span>`).join(' ');
+}
+
+function csvDragOver(e){e.preventDefault();document.getElementById('csv-drop-zone').classList.add('drag-over');}
+function csvDragLeave(){document.getElementById('csv-drop-zone').classList.remove('drag-over');}
+function csvFileDrop(e){e.preventDefault();csvDragLeave();const f=e.dataTransfer.files[0];if(f)processCSVFile(f);}
+function csvFileSelect(e){const f=e.target.files[0];if(f)processCSVFile(f);}
+
+function parseCSVText(text) {
+  const lines=text.split('\n').filter(l=>l.trim());
+  const sep=lines[0].includes('\t')?'\t':',';
+  function parseRow(line){
+    if(sep==='\t') return line.split('\t').map(c=>c.trim());
+    const res=[];let cur='';let inQ=false;
+    for(const ch of line){if(ch==='"'){inQ=!inQ;}else if(ch===sep&&!inQ){res.push(cur.trim());cur='';}else cur+=ch;}
+    res.push(cur.trim());return res;
+  }
+  const headers=parseRow(lines[0]).map(h=>h.trim().toLowerCase().replace(/\s+/g,'_'));
+  const rows=lines.slice(1).map(l=>{const r=parseRow(l);const o={};headers.forEach((h,i)=>o[h]=(r[i]||'').trim());return o;}).filter(r=>Object.values(r).some(v=>v));
+  return {headers,rows};
+}
+
+function mapCSVHeaders(headers, type) {
+  const mappings = {
+    company:     ['company','company_name','co','firm','name'],
+    scope:       ['scope','services','activity','work'],
+    annual_fees: ['annual_fees','fees','one_time_fees','one-time_fees','amount','charges'],
+    lead_owner:  ['lead_owner','owner','assigned_to','trainer'],
+    work_status: ['work_status','status','work','progress'],
+    payment_received:['payment_received','payment','paid','invoice'],
+    area:        ['area','midc','zone','location'],
+    address:     ['address','addr'],
+    assigned_to: ['assigned_to','assignee','owner'],
+  };
+  const schema = IMPORT_SCHEMAS[type];
+  const result={};
+  schema.fields.forEach(field=>{
+    const aliases=(mappings[field]||[field]);
+    const match=headers.find(h=>aliases.includes(h)||aliases.some(a=>h.includes(a)));
+    result[field]=match||null;
+  });
+  return result;
+}
+
+function processCSVFile(file) {
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const {headers,rows}=parseCSVText(e.target.result);
+    const type=document.getElementById('csv-import-type').value;
+    const headerMap=mapCSVHeaders(headers,type);
+    const schema=IMPORT_SCHEMAS[type];
+    const mappedRows=rows.map(r=>{
+      const out={};
+      schema.fields.forEach(f=>{out[f]=headerMap[f]?r[headerMap[f]]||null:null;});
+      return out;
+    }).filter(r=>r.company);
+    csvParsedRows=mappedRows;
+    csvParsedSchema=type;
+    // Show preview
+    const prevWrap=document.getElementById('csv-preview-wrap');
+    const previewRows=mappedRows.slice(0,5);
+    const th=schema.fields.map(f=>`<th style="padding:5px 10px;text-align:left;font-size:10px;color:var(--muted);border-bottom:1px solid var(--border);background:var(--surface2);">${f}</th>`).join('');
+    const trs=previewRows.map(r=>'<tr>'+schema.fields.map(f=>`<td style="padding:4px 10px;font-size:12px;border-bottom:1px solid var(--border);">${(r[f]||'—').slice?.(0,30)}</td>`).join('')+'</tr>').join('');
+    prevWrap.innerHTML=`<p style="font-size:11px;color:var(--muted);margin:0 0 6px;">Preview — ${mappedRows.length} rows detected (showing first ${previewRows.length})</p><div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;"><thead><tr>${th}</tr></thead><tbody>${trs}</tbody></table></div>`;
+    prevWrap.style.display='block';
+    // Build + show SQL
+    const sql=buildImportSQL(type,mappedRows);
+    const sqlEl=document.getElementById('csv-sql');
+    sqlEl.textContent=sql;sqlEl.style.display='block';
+    document.getElementById('csv-row-count').textContent=mappedRows.length+' rows ready';
+    document.getElementById('csv-push-btn').style.display='inline-flex';
+    document.getElementById('csv-copy-btn').style.display='inline-flex';
+    document.getElementById('csv-drop-zone').classList.remove('drag-over');
+  };
+  reader.readAsText(file);
+}
+
+async function pushCSVToDB() {
+  if(!csvParsedRows.length||!csvParsedSchema){showToast('Upload a CSV file first',true);return;}
+  const schema=IMPORT_SCHEMAS[csvParsedSchema];
+  const resultEl=document.getElementById('csv-result');
+  resultEl.style.display='none';
+  setLoading(true,'Importing '+csvParsedRows.length+' rows…');
+  let ok=0,fail=0;
+  for(const row of csvParsedRows){
+    const body=schema.clientType?{client_type:schema.clientType,...row}:{...row};
+    Object.keys(body).forEach(k=>{if(body[k]===null||body[k]==='')delete body[k];});
+    schema.numericFields.forEach(f=>{if(body[f])body[f]=parseFloat(String(body[f]).replace(/,/g,''))||null;if(!body[f])delete body[f];});
+    try{await sb(schema.table,{method:'POST',body});ok++;}
+    catch(e){fail++;console.error(e);}
+  }
+  setLoading(false);
+  resultEl.className='import-result-banner '+(fail===0?'ok':'err');
+  resultEl.textContent=fail===0?`✓ ${ok} rows imported!`:`✓ ${ok} imported, ✗ ${fail} failed`;
+  resultEl.style.display='block';
+  if(ok>0){showToast(ok+' rows imported!');loadData();}
+}
+
+document.addEventListener('change',e=>{if(e.target.id==='csv-import-type')updateCSVExpected();});
 
 document.getElementById('login-pass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
 initLogin();
