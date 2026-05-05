@@ -441,7 +441,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:16
       <div style="font-size:13px;font-weight:700;color:var(--text2);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:14px;border-left:3px solid var(--green);padding-left:10px;">APR 2026 — MAR 2027</div>
       <div class="grid-4">
         <div class="stat-card accent"><div class="label">Total Leads</div><div class="value" id="ov-total">—</div><div class="sub">monthly + one time</div><div class="card-glow"></div></div>
-        <div class="stat-card" style="border-color:var(--green);background:var(--green-dim);"><div class="label" style="color:var(--green);">Revenue Won</div><div class="value" id="ov-revenue" style="color:var(--green);font-size:22px;">—</div><div class="sub">closed deals this year</div><div class="card-glow" style="background:var(--green);"></div></div>
+        <div class="stat-card" style="border-color:var(--green);background:var(--green-dim);"><div class="label" style="color:var(--green);">Revenue Won</div><div class="value" id="ov-revenue" style="color:var(--green);font-size:22px;">—</div><div class="sub" id="ov-revenue-sub">from quoted fees</div><div class="card-glow" style="background:var(--green);"></div></div>
         <div class="stat-card purple"><div class="label">High Priority</div><div class="value" id="ov-priority">—</div><div class="sub">need attention</div><div class="card-glow"></div></div>
         <div class="stat-card blue"><div class="label">Brochures Sent</div><div class="value" id="ov-brochures">—</div><div class="sub">of 100 weekly target</div><div class="card-glow"></div></div>
       </div>
@@ -1037,7 +1037,12 @@ function getFilteredLeads() {
   if(isManager(currentUser)) {
     return viewingMember === 'all' ? allLeads : allLeads.filter(l => l.assigned_to === viewingMember);
   }
-  return allLeads.filter(l => l.assigned_to === currentUser.name);
+  // Match on full name OR first name (handles import inconsistencies)
+  const firstName = (currentUser.name||'').split(' ')[0].toLowerCase();
+  return allLeads.filter(l => {
+    const at = (l.assigned_to||'').toLowerCase();
+    return at === currentUser.name.toLowerCase() || at === firstName || at.startsWith(firstName+' ');
+  });
 }
 
 function getFilteredBrochures() {
@@ -1127,22 +1132,23 @@ function renderOverview() {
   const sentB = brochures.filter(b => b.status === 'Sent' || b.status === 'Dispatched').length;
   const broP  = Math.min(100, Math.round(sentB/100*100));
 
-  // Revenue: from quoted_fees on won leads + annual_fees from sales_clients
-  const wonLeads  = leads.filter(l => l.status==='Closed/Won'||l.status==='Closed/Won - One Time');
-  const leadsRev  = wonLeads.reduce((s,l)=>s+(parseFloat(l.quoted_fees)||0),0);
-  const clientRev = (allClients||[]).reduce((s,c)=>s+(parseFloat(c.annual_fees)||0),0);
-  const totalRev  = leadsRev + clientRev;
+  // Revenue: ONLY from quoted_fees entered on won leads in pipeline
+  const allLeadsForRev = isManager(currentUser) ? allLeads : allLeads.filter(l=>l.assigned_to===currentUser.name);
+  const wonLeads  = allLeadsForRev.filter(l => l.status==='Closed/Won'||l.status==='Closed/Won - One Time');
+  const totalRev  = wonLeads.reduce((s,l)=>s+(parseFloat(l.quoted_fees)||0),0);
 
   // Split by activity type for dual kanban
   const monthlyLeads = leads.filter(l => !(l.activity_type||'').toLowerCase().includes('one'));
   const oneTimeLeads = leads.filter(l => (l.activity_type||'').toLowerCase().includes('one'));
-  const mcRev = monthlyLeads.filter(l=>l.status==='Closed/Won').reduce((s,l)=>s+(parseFloat(l.quoted_fees)||0),0)
-              + (allClients||[]).filter(c=>c.client_type==='Monthly Compliance').reduce((s,c)=>s+(parseFloat(c.annual_fees)||0),0);
-  const otRev = oneTimeLeads.filter(l=>l.status==='Closed/Won - One Time').reduce((s,l)=>s+(parseFloat(l.quoted_fees)||0),0)
-              + (allClients||[]).filter(c=>c.client_type==='One Time').reduce((s,c)=>s+(parseFloat(c.annual_fees)||0),0);
+
+  // Per-member revenue breakdown (for manager: show all; for member: show own)
+  const mcRev = allLeadsForRev.filter(l=>l.status==='Closed/Won').reduce((s,l)=>s+(parseFloat(l.quoted_fees)||0),0);
+  const otRev = allLeadsForRev.filter(l=>l.status==='Closed/Won - One Time').reduce((s,l)=>s+(parseFloat(l.quoted_fees)||0),0);
 
   document.getElementById('ov-total').textContent = leads.length;
   document.getElementById('ov-revenue').textContent = fmtRev(totalRev);
+  const revSub = document.getElementById('ov-revenue-sub');
+  if(revSub) revSub.textContent = isManager(currentUser) ? 'all team · '+wonLeads.length+' deals' : (wonLeads.length+' deals closed');
   document.getElementById('ov-priority').textContent = prio;
   document.getElementById('ov-brochures').textContent = sentB;
   document.getElementById('ov-bro-count').textContent = sentB;
@@ -1354,8 +1360,20 @@ function renderAnalytics() {
 // TEAM VIEW
 // ══════════════════════════════════════════════════
 function renderTeam() {
+  // Per-member revenue map
+  const memberRevMap = {};
+  allLeads.forEach(l => {
+    if(l.quoted_fees && (l.status==='Closed/Won'||l.status==='Closed/Won - One Time')) {
+      memberRevMap[l.assigned_to] = (memberRevMap[l.assigned_to]||0) + parseFloat(l.quoted_fees);
+    }
+  });
   document.getElementById('team-stat-cards').innerHTML = allMembers.map((m,i) => {
-    const mLeads = allLeads.filter(l => l.assigned_to === m.name);
+    const firstName = (m.name||'').split(' ')[0].toLowerCase();
+    const mLeads = allLeads.filter(l => {
+      const at = (l.assigned_to||'').toLowerCase();
+      return at === m.name.toLowerCase() || at === firstName;
+    });
+    const mRev = memberRevMap[m.name] || 0;
     const mWarm  = mLeads.filter(l => ['Responded','Meeting Scheduled'].includes(l.status)).length;
     const mBro   = allBrochures.filter(b => b.assigned_to===m.name && b.status==='Sent').length;
     const color  = MEMBER_COLORS[i%MEMBER_COLORS.length];
