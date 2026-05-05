@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Syne+Mono&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #f1f5f9;
+  --bg: #f0f4f8;
   --sidebar: #ffffff;
   --surface: #ffffff;
   --surface2: #f8fafc;
@@ -438,24 +438,24 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:16
     <!-- OVERVIEW -->
     <div class="panel active" id="panel-overview">
       <div id="pw-banner"></div>
-      <div style="font-size:13px;font-weight:700;color:var(--text2);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:12px;">APR 2026 — MAR 2027</div>
+      <div style="font-size:13px;font-weight:700;color:var(--text2);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:14px;border-left:3px solid var(--green);padding-left:10px;">APR 2026 — MAR 2027</div>
       <div class="grid-4">
         <div class="stat-card accent"><div class="label">Total Leads</div><div class="value" id="ov-total">—</div><div class="sub">monthly + one time</div><div class="card-glow"></div></div>
-        <div class="stat-card" style="border-color:var(--green);background:var(--green-dim);"><div class="label" style="color:var(--green);">Revenue Won</div><div class="value" id="ov-revenue" style="color:var(--green);font-size:20px;">—</div><div class="sub">from closed deals</div><div class="card-glow" style="background:var(--green);"></div></div>
+        <div class="stat-card" style="border-color:var(--green);background:var(--green-dim);"><div class="label" style="color:var(--green);">Revenue Won</div><div class="value" id="ov-revenue" style="color:var(--green);font-size:22px;">—</div><div class="sub">closed deals this year</div><div class="card-glow" style="background:var(--green);"></div></div>
         <div class="stat-card purple"><div class="label">High Priority</div><div class="value" id="ov-priority">—</div><div class="sub">need attention</div><div class="card-glow"></div></div>
         <div class="stat-card blue"><div class="label">Brochures Sent</div><div class="value" id="ov-brochures">—</div><div class="sub">of 100 weekly target</div><div class="card-glow"></div></div>
       </div>
       <div class="card" style="padding:14px 14px 10px;margin-bottom:10px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
           <div class="section-title">📋 Monthly Compliance Pipeline</div>
-          <span style="font-size:12px;color:var(--muted);" id="monthly-rev-label"></span>
+          <span style="font-size:12px;color:var(--green);font-weight:600;" id="monthly-rev-label"></span>
         </div>
         <div class="pipeline-kanban" id="pipeline-kanban-monthly"></div>
       </div>
       <div class="card" style="padding:14px 14px 10px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
           <div class="section-title">⚡ One Time Activity Pipeline</div>
-          <span style="font-size:12px;color:var(--muted);" id="onetime-rev-label"></span>
+          <span style="font-size:12px;color:var(--blue);font-weight:600;" id="onetime-rev-label"></span>
         </div>
         <div class="pipeline-kanban" id="pipeline-kanban-onetime"></div>
       </div>
@@ -663,6 +663,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:16
     <div class="modal-section"><div class="modal-section-label">Email</div><div id="m-emails"></div></div>
     <div class="modal-section"><div class="modal-section-label">Phone</div><div id="m-phones"></div></div>
     <div class="modal-section"><div class="modal-section-label">Notes / Next Action</div><div id="m-notes" style="font-size:13px;color:var(--muted);line-height:1.6;"></div></div>
+    <div class="modal-section" style="display:flex;align-items:center;gap:10px;">
+      <div class="modal-section-label" style="white-space:nowrap;">Quoted Fees (₹)</div>
+      <input type="number" id="m-fees" class="form-input" placeholder="Enter amount" style="max-width:160px;" onblur="saveLeadFees()" />
+    </div>
     <div class="modal-actions" id="m-actions"></div>
   </div>
 </div>
@@ -690,6 +694,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:16
       <div class="form-group"><label class="form-label">Priority</label>
         <select class="form-select" id="nl-priority"><option value="Medium">Medium</option><option value="High">High</option><option value="Low">Low</option></select>
       </div>
+      <div class="form-group"><label class="form-label">Activity Type</label><select class="form-select" id="nl-activity"><option value="Monthly">Monthly Compliance</option><option value="One Time">One Time Activity</option></select></div>
+      <div class="form-group"><label class="form-label">Quoted Fees (₹)</label><input type="number" class="form-input" id="nl-fees" placeholder="e.g. 48000"/></div>
       <div class="form-group full"><label class="form-label">Requirements / Notes</label><textarea class="form-textarea" id="nl-notes" placeholder="Compliance pain points, requirements…"></textarea></div>
     </div>
     <button class="save-btn" onclick="submitNewLead()">Save Lead to Database</button>
@@ -1112,6 +1118,8 @@ function switchView(member, el) {
 // ══════════════════════════════════════════════════
 // OVERVIEW
 // ══════════════════════════════════════════════════
+function fmtRev(n){ return n>=100000?'₹'+(n/100000).toFixed(1)+'L':n>=1000?'₹'+(n/1000).toFixed(0)+'K':n>0?'₹'+n:'—'; }
+
 function renderOverview() {
   const leads    = getFilteredLeads();
   const brochures = getFilteredBrochures();
@@ -1119,33 +1127,35 @@ function renderOverview() {
   const sentB = brochures.filter(b => b.status === 'Sent' || b.status === 'Dispatched').length;
   const broP  = Math.min(100, Math.round(sentB/100*100));
 
-  // Revenue from won deals in sales_clients
-  const mcRev = (allClients||[]).filter(c=>c.client_type==='Monthly Compliance').reduce((s,c)=>s+(parseFloat(c.annual_fees)||0),0);
-  const otRev = (allClients||[]).filter(c=>c.client_type==='One Time').reduce((s,c)=>s+(parseFloat(c.annual_fees)||0),0);
-  const totalRev = mcRev + otRev;
-  const revStr = totalRev >= 100000 ? '₹'+(totalRev/100000).toFixed(1)+'L' : totalRev >= 1000 ? '₹'+(totalRev/1000).toFixed(0)+'K' : '₹'+totalRev;
+  // Revenue: from quoted_fees on won leads + annual_fees from sales_clients
+  const wonLeads  = leads.filter(l => l.status==='Closed/Won'||l.status==='Closed/Won - One Time');
+  const leadsRev  = wonLeads.reduce((s,l)=>s+(parseFloat(l.quoted_fees)||0),0);
+  const clientRev = (allClients||[]).reduce((s,c)=>s+(parseFloat(c.annual_fees)||0),0);
+  const totalRev  = leadsRev + clientRev;
+
+  // Split by activity type for dual kanban
+  const monthlyLeads = leads.filter(l => !(l.activity_type||'').toLowerCase().includes('one'));
+  const oneTimeLeads = leads.filter(l => (l.activity_type||'').toLowerCase().includes('one'));
+  const mcRev = monthlyLeads.filter(l=>l.status==='Closed/Won').reduce((s,l)=>s+(parseFloat(l.quoted_fees)||0),0)
+              + (allClients||[]).filter(c=>c.client_type==='Monthly Compliance').reduce((s,c)=>s+(parseFloat(c.annual_fees)||0),0);
+  const otRev = oneTimeLeads.filter(l=>l.status==='Closed/Won - One Time').reduce((s,l)=>s+(parseFloat(l.quoted_fees)||0),0)
+              + (allClients||[]).filter(c=>c.client_type==='One Time').reduce((s,c)=>s+(parseFloat(c.annual_fees)||0),0);
 
   document.getElementById('ov-total').textContent = leads.length;
-  document.getElementById('ov-revenue').textContent = revStr;
+  document.getElementById('ov-revenue').textContent = fmtRev(totalRev);
   document.getElementById('ov-priority').textContent = prio;
   document.getElementById('ov-brochures').textContent = sentB;
   document.getElementById('ov-bro-count').textContent = sentB;
   document.getElementById('ov-bro-bar').style.width = broP + '%';
   document.getElementById('ov-bro-pct').textContent  = broP + '% complete';
 
-  // Dual pipeline kanbans
-  const monthlyLeads = leads.filter(l => (l.activity_type||'').toLowerCase().includes('month') || (!l.activity_type && !['one time','one-time','onetime'].includes((l.activity_type||'').toLowerCase())));
-  const oneTimeLeads = leads.filter(l => (l.activity_type||'').toLowerCase().includes('one'));
-  renderKanban(monthlyLeads, 'pipeline-kanban-monthly');
-  renderKanban(oneTimeLeads, 'pipeline-kanban-onetime');
-
-  // Revenue labels
-  const mcRevStr = mcRev >= 100000 ? '₹'+(mcRev/100000).toFixed(1)+'L won' : mcRev > 0 ? '₹'+(mcRev/1000).toFixed(0)+'K won' : '';
-  const otRevStr = otRev >= 100000 ? '₹'+(otRev/100000).toFixed(1)+'L won' : otRev > 0 ? '₹'+(otRev/1000).toFixed(0)+'K won' : '';
   const mlEl = document.getElementById('monthly-rev-label');
   const olEl = document.getElementById('onetime-rev-label');
-  if(mlEl) mlEl.textContent = mcRevStr;
-  if(olEl) olEl.textContent = otRevStr;
+  if(mlEl) mlEl.textContent = mcRev > 0 ? fmtRev(mcRev)+' won' : '';
+  if(olEl) olEl.textContent = otRev > 0 ? fmtRev(otRev)+' won' : '';
+
+  renderKanban(monthlyLeads, 'pipeline-kanban-monthly');
+  renderKanban(oneTimeLeads, 'pipeline-kanban-onetime');
 
   const stages = [
     {k:'New Lead',c:'#6366f1'},{k:'Not Responded',c:'#f59e0b'},{k:'Sent',c:'#60a5fa'},
@@ -1193,33 +1203,27 @@ const PIPELINE_COLS = [
 let dragLeadId = null;
 
 function renderKanban(leads, targetId) {
-  const el = document.getElementById(targetId || 'pipeline-kanban-monthly');
+  const el = document.getElementById(targetId);
   if(!el) return;
   el.innerHTML = PIPELINE_COLS.map(col => {
     const colLeads = leads.filter(l => l.status === col.key);
-    // Revenue for won column
-    const colRev = col.key === 'Closed/Won'
-      ? colLeads.reduce((s,l) => s + (parseFloat(l.annual_fees)||parseFloat(l.quoted_fees)||0), 0)
-      : 0;
-    const revLabel = colRev > 0 ? `<span style="font-size:10px;color:${col.color};font-family:var(--mono);">₹${colRev>=100000?(colRev/100000).toFixed(1)+'L':colRev>=1000?(colRev/1000).toFixed(0)+'K':colRev}</span>` : '';
+    const colRev = colLeads.reduce((s,l)=>s+(parseFloat(l.quoted_fees)||0),0);
+    const revTag = colRev>0 ? `<span style="font-size:10px;color:${col.color};font-family:var(--mono);opacity:0.8;">${fmtRev(colRev)}</span>` : '';
     const cards = colLeads.length
       ? colLeads.map(l => {
           const ownerColor = getMemberColor(l.assigned_to);
-          const feeStr = l.annual_fees || l.quoted_fees ? `<div style="font-size:10px;color:var(--green);font-family:var(--mono);margin-top:2px;">₹${parseFloat(l.annual_fees||l.quoted_fees||0).toLocaleString('en-IN')}</div>` : '';
+          const feeBadge = l.quoted_fees ? `<div style="font-size:11px;color:var(--green);font-family:var(--mono);margin-top:2px;font-weight:600;">₹${Number(l.quoted_fees).toLocaleString('en-IN')}</div>` : '';
           return `<div class="pipeline-card" draggable="true" data-id="${l.id}" onclick="openContactModal('${l.id}')" ondragstart="onDragStart(event,'${l.id}')" ondragend="onDragEnd(event)">
             <div class="co">${l.priority==='High'?'<span class="prio-dot"></span>':''}${l.company}</div>
-            ${feeStr}
+            ${feeBadge}
             <div class="ct"><span class="owner-dot" style="background:${ownerColor};"></span>${(l.assigned_to||'').split(' ')[0]}</div>
           </div>`;
         }).join('')
       : '<div class="pipeline-empty">Drop here</div>';
-    return `<div class="pipeline-col" data-col="${col.key}" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event,'${col.key}','${targetId||'monthly'}')">
+    return `<div class="pipeline-col" data-col="${col.key}" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event,'${col.key}','${targetId}')">
       <div class="pipeline-col-header">
         <span class="pipeline-col-title" style="color:${col.color};">${col.label}</span>
-        <div style="display:flex;align-items:center;gap:4px;">
-          ${revLabel}
-          <span class="pipeline-col-count" style="background:${col.bg};color:${col.color};">${colLeads.length}</span>
-        </div>
+        <div style="display:flex;align-items:center;gap:5px;">${revTag}<span class="pipeline-col-count" style="background:${col.bg};color:${col.color};">${colLeads.length}</span></div>
       </div>
       <div class="pipeline-col-body">${cards}</div>
     </div>`;
@@ -1234,9 +1238,8 @@ async function onDrop(e,newStatus,pipelineType){
   e.preventDefault();e.currentTarget.classList.remove('drag-over');
   const id=e.dataTransfer.getData('text/plain');if(!id)return;
   const lead=allLeads.find(l=>l.id===id);if(!lead||lead.status===newStatus)return;
-  // If dropped into other pipeline, update activity_type too
-  if(pipelineType==='onetime' && !(lead.activity_type||'').toLowerCase().includes('one')) lead.activity_type='One Time';
-  if(pipelineType==='monthly' && (lead.activity_type||'').toLowerCase().includes('one')) lead.activity_type='Monthly';
+  if(pipelineType&&pipelineType.includes('onetime')) lead.activity_type='One Time';
+  else if(pipelineType&&pipelineType.includes('monthly')) lead.activity_type='Monthly';
   lead.status=newStatus;renderOverview();
   try{await sbPatch('leads','id=eq.'+id,{status:newStatus,activity_type:lead.activity_type});showToast('Stage → '+newStatus);}
   catch(err){showToast('Update failed',true);}
@@ -1287,7 +1290,7 @@ async function updateLeadStatus(id, status) {
   const lead = allLeads.find(l => l.id === id);
   if(!lead) return;
   lead.status = status;
-  try{await sbPatch('leads','id=eq.'+id,{status});showToast('Updated: '+status);renderKanban(getFilteredLeads());}
+  try{await sbPatch('leads','id=eq.'+id,{status});showToast('Updated: '+status);renderOverview();}
   catch(e){showToast('Update failed',true);}
 }
 
@@ -1675,6 +1678,8 @@ async function submitNewLead() {
     company,
     location:document.getElementById('nl-location').value.trim(),
     sector:document.getElementById('nl-sector').value.trim(),
+    activity_type:document.getElementById('nl-activity')?document.getElementById('nl-activity').value:'Monthly',
+    quoted_fees:parseFloat(document.getElementById('nl-fees')?document.getElementById('nl-fees').value:'')||null,
     contact_name:document.getElementById('nl-contact').value.trim(),
     contact_position:document.getElementById('nl-position').value.trim(),
     contact_email:document.getElementById('nl-email').value.trim(),
@@ -1698,6 +1703,20 @@ async function submitNewLead() {
 // ══════════════════════════════════════════════════
 // CONTACT MODAL
 // ══════════════════════════════════════════════════
+
+async function saveLeadFees() {
+  const el = document.getElementById('m-fees');
+  const id = el._leadId;
+  const fees = parseFloat(el.value) || null;
+  if(!id) return;
+  const lead = allLeads.find(l => l.id === id);
+  if(lead) lead.quoted_fees = fees;
+  try {
+    await sbPatch('leads','id=eq.'+id,{quoted_fees:fees});
+    showToast('Fees saved: ₹'+(fees||0).toLocaleString('en-IN'));
+    renderOverview();
+  } catch(e) { showToast('Failed to save fees',true); }
+}
 function openContactModal(id) {
   const l = allLeads.find(x => x.id === id); if(!l) return;
   document.getElementById('m-company').textContent  = l.company;
@@ -1705,6 +1724,8 @@ function openContactModal(id) {
   document.getElementById('m-emails').innerHTML  = l.contact_email?l.contact_email.split(';').map(e=>`<div class="modal-value">${e.trim()}</div>`).join(''):'<div class="modal-value" style="color:var(--muted);">—</div>';
   document.getElementById('m-phones').innerHTML  = l.contact_phone?`<div class="modal-value">${l.contact_phone}</div>`:'<div class="modal-value" style="color:var(--muted);">—</div>';
   document.getElementById('m-notes').textContent = l.requirements||l.notes||'No notes';
+  document.getElementById('m-fees').value = l.quoted_fees || '';
+  document.getElementById('m-fees')._leadId = l.id;
   const actions=[];
   if(l.contact_email){const fe=l.contact_email.split(';')[0].trim();actions.push(`<button class="modal-action-btn" onclick="copyText('${fe}','Email copied!')">Copy Email</button>`);actions.push(`<a class="modal-action-btn" href="mailto:${fe}">Send Email</a>`);}
   if(l.contact_phone)actions.push(`<button class="modal-action-btn" onclick="copyText('${l.contact_phone}','Phone copied!')">Copy Phone</button>`);
