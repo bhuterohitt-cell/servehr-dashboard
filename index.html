@@ -377,7 +377,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
   <div class="login-box">
     <div class="login-logo">
       <div class="login-logo-mark">S</div>
-      <div><div class="login-logo-text">ServeHR CRM</div><div class="login-logo-sub">Pre-Sales Dashboard v3</div></div>
+      <div><div class="login-logo-text">ServeHR CRM</div><div class="login-logo-sub">Pre-Sales Dashboard v3.1</div></div>
     </div>
     <div class="login-title">Sign In</div>
     <div class="login-sub">Enter your name and password to access your dashboard.</div>
@@ -405,7 +405,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
   <div class="sidebar-logo">
     <div class="logo-mark">S</div>
     <div class="logo-text">ServeHR CRM</div>
-    <div class="logo-sub">Pre-Sales v3</div>
+    <div class="logo-sub">Pre-Sales v3.1</div>
   </div>
   <div class="team-switcher" id="team-switcher" style="display:none;">
     <div class="team-switcher-label">View Member</div>
@@ -959,20 +959,31 @@ async function sb(table, opts={}) {
   if(opts.limit)  params.push('limit='+opts.limit);
   if(params.length) url += '?' + params.join('&');
   const method = opts.method || 'GET';
+  const bodyJson = opts.body ? JSON.stringify(opts.body) : undefined;
   const res = await fetch(url, {
     method,
     headers: {'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=representation'},
-    body: opts.body ? JSON.stringify(opts.body) : undefined
+    body: bodyJson
   });
-  if(!res.ok) throw new Error(await res.text());
+  if(!res.ok) {
+    const errText = await res.text();
+    console.error(method, 'failed:', res.status, errText);
+    throw new Error(errText);
+  }
   if(method==='DELETE'||res.status===204) return null;
   return res.json();
 }
 
 async function sbPatch(table, filter, body) {
   const url = SB_URL + '/rest/v1/' + table + '?' + filter;
-  const res = await fetch(url, {method:'PATCH',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify(body)});
-  if(!res.ok) throw new Error(await res.text());
+  const bodyJson = JSON.stringify(body);
+  console.log('PATCH', table, filter, bodyJson);
+  const res = await fetch(url, {method:'PATCH',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=representation'},body:bodyJson});
+  if(!res.ok) {
+    const errText = await res.text();
+    console.error('PATCH failed:', res.status, errText);
+    throw new Error(errText);
+  }
   return res.json();
 }
 
@@ -1132,7 +1143,10 @@ function navTo(name,el){
 
 function refreshCurrentPanel(){
   const a=document.querySelector('.panel.active');
-  if(a) navTo(a.id.replace('panel-',''),null);
+  if(!a) return;
+  const name=a.id.replace('panel-','');
+  const renders={overview:renderOverview,leads:renderLeads,brochure:renderBrochure,analytics:renderAnalytics,team:renderTeam,clients:renderClients,followups:renderFollowUps,pitch:renderPitch,journal:renderJournal,notifications:renderNotifications};
+  if(renders[name]) renders[name]();
 }
 
 function renderTeamTabs(){
@@ -1351,12 +1365,11 @@ async function onDrop(e,newStage,pipelineId){
   const lead=allLeads.find(l=>l.id===id);
   if(!lead || lead.status===newStage) return;
 
-  const today=new Date().toISOString().split('T')[0];
-  const stageKey='stage_date_'+newStage.replace(/\s+/g,'_').toLowerCase();
+  const oldStatus = lead.status;
+  const oldActivity = lead.activity_type;
 
   // Update local state immediately
   lead.status=newStage;
-  lead[stageKey]=today;
 
   // Determine activity type from pipeline
   if(pipelineId.includes('monthly')) lead.activity_type='Monthly';
@@ -1367,7 +1380,7 @@ async function onDrop(e,newStage,pipelineId){
 
   // Sync to database
   try {
-    const updateBody = {status: newStage, [stageKey]: today};
+    const updateBody = {status: newStage};
     if(pipelineId.includes('monthly')) updateBody.activity_type = 'Monthly';
     else if(pipelineId.includes('onetime')) updateBody.activity_type = 'One Time';
 
@@ -1377,18 +1390,14 @@ async function onDrop(e,newStage,pipelineId){
     console.error('Pipeline update failed:', e);
     showToast('Update failed — reverted', true);
     // Revert on failure
-    lead.status = lead._oldStatus || 'New Lead';
+    lead.status = oldStatus;
+    lead.activity_type = oldActivity;
     renderOverview();
   }
 }
 
 // Store old status before drag for rollback
-const originalOnDragStart = onDragStart;
-onDragStart = function(e, id) {
-  const lead = allLeads.find(l=>l.id===id);
-  if(lead) lead._oldStatus = lead.status;
-  originalOnDragStart(e, id);
-};
+// Drag start backup removed - now using local oldStatus variable in onDrop
 
 // ══════════════════════════════════════════════════════
 // NOTES
@@ -1462,13 +1471,19 @@ async function saveMeeting(){
   const loc=document.getElementById('meeting-location').value;
   const notes=document.getElementById('meeting-notes').value;
   lead.meeting_date=date; lead.meeting_time=time; lead.meeting_location=loc; lead.meeting_notes=notes;
+  const oldStatus = lead.status;
   if(lead.status!=='Onboarding Meeting') lead.status='Onboarding Meeting';
   try{
     await sbPatch('leads','id=eq.'+currentMeetingLeadId,{meeting_date:date,meeting_time:time,meeting_location:loc,meeting_notes:notes,status:'Onboarding Meeting'});
     showToast('Meeting scheduled!');
     closeModal('meeting-modal');
-    renderOverview();
-  }catch(e){showToast('Save failed',true);}
+    refreshCurrentPanel();
+  }catch(e){
+    console.error('Meeting save failed:', e);
+    showToast('Save failed',true);
+    lead.status = oldStatus;
+    refreshCurrentPanel();
+  }
 }
 
 // ══════════════════════════════════════════════════════
@@ -1553,7 +1568,7 @@ function renderLeads(){
       <td><span class="badge ${scopeBadgeClass(l.status)}">${l.status}</span></td>
       <td>${l.priority==='High'?'<span class="badge badge-priority">★ High</span>':l.priority==='Dead Horse'?'<span class="badge badge-dead">🐴 Dead</span>':l.priority||'—'}</td>
       <td><div style="display:flex;align-items:center;gap:5px;"><div style="width:18px;height:18px;border-radius:50%;background:${oc};display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#fff;">${getInitials(l.assigned_to)}</div><span style="font-size:11px;">${(l.assigned_to||'').split(' ')[0]}</span></div></td>
-      <td><select class="stage-select" onchange="updateLeadStatus('${l.id}',this.value)">${PIPELINE_STAGES.map(s=>`<option ${l.status===s.key?'selected':''}>${s.key}</option>`).join('')}</select></td>
+      <td><select class="stage-select" onchange="updateLeadStatus('${l.id}',this.value)">${PIPELINE_STAGES.map(s=>`<option value="${s.key}" ${l.status===s.key?'selected':''}>${s.label}</option>`).join('')}</select></td>
       <td><button class="contact-btn" onclick="openContactModal('${l.id}')">View</button></td>
     </tr>`;
   }).join('');
@@ -1563,21 +1578,19 @@ async function updateLeadStatus(id,status){
   const lead=allLeads.find(l=>l.id===id);if(!lead)return;
   const oldStatus = lead.status;
   lead.status=status;
-  const today=new Date().toISOString().split('T')[0];
-  const stageKey='stage_date_'+status.replace(/\s+/g,'_').toLowerCase();
-  lead[stageKey]=today;
 
-  // Re-render immediately
-  renderOverview();
+  // Re-render the CURRENT panel (not always overview)
+  refreshCurrentPanel();
 
   try{
-    await sbPatch('leads','id=eq.'+id,{status,[stageKey]:today});
+    // Only update status - stage_date columns may not exist in DB
+    await sbPatch('leads','id=eq.'+id,{status:status});
     showToast('✓ Status: ' + status);
   }catch(e){
     console.error('Status update failed:', e);
     showToast('Update failed — reverted', true);
     lead.status = oldStatus;
-    renderOverview();
+    refreshCurrentPanel();
   }
 }
 
