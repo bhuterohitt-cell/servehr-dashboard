@@ -1686,7 +1686,6 @@ async function submitNewBrochure(){
     address:document.getElementById('nb-address').value.trim(),
     contact_person:document.getElementById('nb-contact').value.trim(),
     contact_phone:document.getElementById('nb-phone').value.trim(),
-    contact_email:document.getElementById('nb-email').value.trim(),
     status:document.getElementById('nb-status-select').value,
     notes:document.getElementById('nb-notes').value.trim(),
     assigned_to:currentUser.name
@@ -1895,7 +1894,6 @@ async function executeCsvImport(){
       address:r.address||'',
       contact_person:r.contact_person||'',
       contact_phone:r.contact_phone||'',
-      contact_email:r.contact_email||'',
       status:'Pending',
       dispatched_date:null,
       notes:r.notes||'',
