@@ -1889,16 +1889,17 @@ async function executeCsvImport(){
   for(const batch of batches){
   const results = await Promise.allSettled(
     batch.map(r => sb('brochure_tracker',{method:'POST',body:{
-  company:r.company,
-  area:'Other',
-  address:r.address||'',
-  contact_person:r.contact_person||'',
-  contact_phone:r.contact_phone||'',
-  contact_email:r.contact_email||'',
-  status:'Pending',
-  dispatched_date:null,
-  notes:r.notes||'',
-  assigned_to:currentUser.name
+      company:r.company,
+      area:'Other',
+      address:r.address||'',
+      contact_person:r.contact_person||'',
+      contact_phone:r.contact_phone||'',
+      contact_email:r.contact_email||'',
+      status:'Pending',
+      dispatched_date:null,
+      notes:r.notes||'',
+      assigned_to:currentUser.name
+  
     }}))
   );
   results.forEach(res=>{
