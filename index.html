@@ -1048,7 +1048,7 @@ let allLeads = [], allBrochures = [], allJournal = [], allMembers = [], allNotif
 let manualFollowUps = [];
 let currentNoteLeadId = null, currentMeetingLeadId = null;
 let chartInstances = {};
-let csvParsedRows = [], csvHeaders = [], csvMapping = {};
+let csvParsedRows = [], csvHeaders = [], csvMapping = {}, csvMappedRows = [];
 
 // ══════════════════════════════════════════════════════
 // SUPABASE
@@ -1888,7 +1888,8 @@ async function executeCsvImport(){
   for(let i=0;i<mappedRows.length;i+=batchSize) batches.push(mappedRows.slice(i,i+batchSize));
 
   for(const batch of batches){
-    const bodies=batch.map(r=>({
+  const results = await Promise.allSettled(
+    batch.map(r => sb('brochure_tracker',{method:'POST',body:{
       company:r.company,
       area:'Other',
       address:r.address||'',
@@ -1899,19 +1900,19 @@ async function executeCsvImport(){
       dispatched_date:null,
       notes:r.notes||'',
       assigned_to:currentUser.name
-    }));
-    try{
-      const result=await sb('brochure_tracker',{method:'POST',body:bodies});
-      if(Array.isArray(result)) allBrochures.push(...result);
-      done+=batch.length;
-    }catch(e){
-      console.error('Batch failed:',e);
-      failed+=batch.length;
+    }}))
+  );
+  results.forEach(res=>{
+    if(res.status==='fulfilled'&&Array.isArray(res.value)){
+      allBrochures.push(...res.value); done++;
+    } else {
+      console.error('Row failed:',res.reason||res.value); failed++;
     }
-    const pct=Math.round((done+failed)/mappedRows.length*100);
-    document.getElementById('csv-progress-fill').style.width=pct+'%';
-    document.getElementById('csv-progress-text').textContent=`Imported ${done} / ${mappedRows.length}…${failed?' ('+failed+' failed)':''}`;
-  }
+  });
+  const pct=Math.round((done+failed)/mappedRows.length*100);
+  document.getElementById('csv-progress-fill').style.width=pct+'%';
+  document.getElementById('csv-progress-text').textContent=`Imported ${done} / ${mappedRows.length}…${failed?' ('+failed+' failed)':''}`;
+}
 
   setTimeout(()=>{
     closeModal('csv-import-modal');
