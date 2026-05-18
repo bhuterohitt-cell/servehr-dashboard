@@ -39,6 +39,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 .login-btn{width:100%;background:var(--green);border:none;color:#fff;font-family:var(--font);font-size:13px;font-weight:700;padding:12px;border-radius:var(--r);cursor:pointer;transition:all .2s;}
 .login-btn:hover{background:#15803d;}
 .login-error{font-size:11px;color:var(--danger);margin-top:8px;display:none;padding:7px 11px;background:var(--danger-dim);border-radius:var(--r-sm);border:1px solid rgba(220,38,38,0.2);}
+.login-error.show{display:block;}
 .login-members{margin-top:20px;padding-top:16px;border-top:1px solid var(--border);}
 .login-members-label{font-size:10px;color:var(--muted);margin-bottom:10px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.1em;}
 .member-chip{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:var(--r-sm);background:var(--surface2);border:1px solid var(--border);margin-bottom:5px;cursor:pointer;transition:all .15s;}
@@ -497,9 +498,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
           <div class="glow" style="background:var(--orange);"></div>
         </div>
         <div class="stat-card brochure" onclick="drillDown('brochure')">
-          <div class="label">Brochures Sent</div>
+          <div class="label">Total Brochures</div>
           <div class="value" id="ov-brochures">—</div>
-          <div class="sub">of 100 weekly target</div>
+          <div class="sub" id="ov-brochures-sub">in your tracker</div>
           <div class="glow" style="background:var(--purple-light);"></div>
         </div>
         <div class="stat-card dead" onclick="drillDown('dead')">
@@ -537,13 +538,13 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
         <div class="card">
           <div class="section-title">Compliance Alerts Today</div>
           <div id="today-alerts"></div>
-          <div class="section-title" style="margin-top:14px;">Brochure Progress</div>
+          <div class="section-title" style="margin-top:14px;">Brochure Progress (Weekly)</div>
           <div style="display:flex;align-items:center;gap:16px;">
             <div class="brochure-num" id="ov-bro-count" style="font-size:36px;">0</div>
             <div class="brochure-info">
-              <div style="font-size:12px;color:var(--text2);margin-bottom:8px;">Target: <strong>100</strong> this week</div>
+              <div style="font-size:12px;color:var(--text2);margin-bottom:8px;">Sent toward <strong>100</strong> weekly target</div>
               <div class="brochure-big-bar"><div class="brochure-big-fill" id="ov-bro-bar" style="width:0%"></div></div>
-              <div style="font-size:10px;color:var(--muted);margin-top:4px;" id="ov-bro-pct">0% complete</div>
+              <div style="font-size:10px;color:var(--muted);margin-top:4px;" id="ov-bro-pct">0% of weekly target</div>
             </div>
           </div>
         </div>
@@ -592,9 +593,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
       <div class="brochure-hero">
         <div class="brochure-num" id="bro-count">0</div>
         <div class="brochure-info">
-          <div style="font-size:12px;color:var(--text2);margin-bottom:8px;">Weekly target: <strong>100 brochures</strong></div>
+          <div style="font-size:12px;color:var(--text2);margin-bottom:8px;">Weekly target: <strong>100 brochures sent</strong></div>
           <div class="brochure-big-bar"><div class="brochure-big-fill" id="bro-bar" style="width:0%"></div></div>
-          <div style="font-size:11px;color:var(--muted);margin-top:4px;" id="bro-pct">0 / 100</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px;" id="bro-pct">0 / 100 sent</div>
         </div>
         <div style="display:flex;gap:8px;margin-left:auto;flex-wrap:wrap;">
           <button class="import-csv-btn" onclick="openCsvImport()">⬆ Import CSV</button>
@@ -1249,6 +1250,11 @@ function renderOverview(){
   const monthlyRev=monthlyWon.reduce((s,l)=>s+(parseFloat(l.quoted_fees)||0),0);
   const onetimeRev=onetimeWon.reduce((s,l)=>s+(parseFloat(l.quoted_fees)||0),0);
   const highPri=activeLeads.filter(l=>l.priority==='High');
+
+  // ── BROCHURE COUNTS ──────────────────────────────────
+  // Stat card: total brochures in tracker (all statuses)
+  const totalBrochures = brochures.length;
+  // Progress bar: only sent/dispatched toward the weekly 100 target
   const sentB=brochures.filter(b=>b.status==='Sent'||b.status==='Dispatched').length;
   const broP=Math.min(100,Math.round(sentB/100*100));
 
@@ -1257,11 +1263,17 @@ function renderOverview(){
   document.getElementById('ov-revenue').textContent=fmtRev(totalRev);
   document.getElementById('ov-rev-split').innerHTML=`<div class="split-item">Monthly: <span class="split-val" style="color:var(--cyan);">${fmtRev(monthlyRev)}</span></div><div class="split-item">OTA: <span class="split-val" style="color:var(--blue);">${fmtRev(onetimeRev)}</span></div>`;
   document.getElementById('ov-priority').textContent=highPri.length;
-  document.getElementById('ov-brochures').textContent=sentB;
+
+  // ── UPDATED: show total brochures on stat card ───────
+  document.getElementById('ov-brochures').textContent=totalBrochures;
+  document.getElementById('ov-brochures-sub').textContent=sentB > 0 ? sentB+' sent this week' : 'in your tracker';
+
   document.getElementById('ov-dead').textContent=deadLeads.length;
+
+  // Progress bar still tracks "sent" toward the weekly target
   document.getElementById('ov-bro-count').textContent=sentB;
   document.getElementById('ov-bro-bar').style.width=broP+'%';
-  document.getElementById('ov-bro-pct').textContent=broP+'% complete';
+  document.getElementById('ov-bro-pct').textContent=broP+'% of weekly target';
 
   const mlRev=monthlyLeads.filter(l=>l.status==='Won').reduce((s,l)=>s+(parseFloat(l.quoted_fees)||0),0);
   const olRev=oneTimeLeads.filter(l=>l.status==='Won').reduce((s,l)=>s+(parseFloat(l.quoted_fees)||0),0);
@@ -1535,8 +1547,18 @@ function drillDown(type){
     title='High Priority Leads';
     items=leads.filter(l=>l.priority==='High'&&l.status!=='Dead Horse').map(l=>({label:l.company,sub:l.status+' · '+(l.contact_name||''),rev:l.quoted_fees}));
   } else if(type==='brochure'){
-    title='Brochures Sent';
-    items=brochures.filter(b=>b.status==='Sent'||b.status==='Dispatched').map(b=>({label:b.company,sub:(b.area?b.area+' · ':'')+(b.dispatched_date||'')}));
+    // ── UPDATED: show all brochures with status breakdown ──
+    title='All Brochures';
+    const sent=brochures.filter(b=>b.status==='Sent'||b.status==='Dispatched');
+    const pending=brochures.filter(b=>b.status==='Pending'||!b.status);
+    const other=brochures.filter(b=>b.status&&b.status!=='Sent'&&b.status!=='Dispatched'&&b.status!=='Pending');
+    items=[
+      {label:'Sent / Dispatched',sub:sent.length+' brochures',bold:true},
+      ...sent.map(b=>({label:b.company,sub:(b.area?b.area+' · ':'')+(b.dispatched_date||'')})),
+      {label:'Pending',sub:pending.length+' brochures',bold:true},
+      ...pending.map(b=>({label:b.company,sub:b.address||''})),
+      ...(other.length?[{label:'Other',sub:other.length+' brochures',bold:true},...other.map(b=>({label:b.company,sub:b.status||''}))]: []),
+    ];
   } else if(type==='dead'){
     title='Dead Horses — No Follow-up';
     items=leads.filter(l=>l.status==='Dead Horse'||l.priority==='Dead Horse').map(l=>({label:l.company,sub:l.status+' · '+(l.contact_name||'')}));
@@ -1644,7 +1666,6 @@ function openAddBrochure(){
   ['nb-company','nb-address','nb-contact','nb-phone','nb-notes'].forEach(id=>document.getElementById(id).value='');
 }
 
-// ─── FIX: submitNewBrochure uses column names that now exist in DB ───
 async function submitNewBrochure(){
   const company=document.getElementById('nb-company').value.trim();
   if(!company){showToast('Company name required',true);return;}
@@ -1675,9 +1696,6 @@ async function submitNewBrochure(){
 // ══════════════════════════════════════════════════════
 // CSV BULK IMPORT
 // ══════════════════════════════════════════════════════
-// Columns that actually exist in brochure_tracker after running the migration SQL:
-// company, area, address, contact_person, contact_phone, status, dispatched_date, notes, assigned_to
-// NOTE: contact_email is intentionally excluded — it does not exist in the table.
 const CSV_TARGET_FIELDS = [
   {key:'company',       label:'Company Name',   required:true,  aliases:['company','company_name','name','firm','organisation','organization','business','entity','client']},
   {key:'address',       label:'Address',        required:false, aliases:['address','addr','location','office_address','full_address','office','place']},
@@ -1831,7 +1849,6 @@ function buildPreview(){
   btn.textContent=valid.length?`Import ${valid.length} Row${valid.length!==1?'s':''}  →`:'No valid rows';
 }
 
-// ─── FIX: executeCsvImport only sends columns that exist in the DB ───
 async function executeCsvImport(){
   const mappedRows=(csvParsedRows._mapped||[]).filter(r=>r._valid);
   if(!mappedRows.length){showToast('No valid rows to import',true);return;}
@@ -1852,8 +1869,8 @@ async function executeCsvImport(){
         company:        r.company,
         area:           'Other',
         address:        r.address        || '',
-        contact_person: r.contact_person || '',   // ← fixed column name
-        contact_phone:  r.contact_phone  || '',   // ← fixed column name
+        contact_person: r.contact_person || '',
+        contact_phone:  r.contact_phone  || '',
         status:         'Pending',
         dispatched_date: null,
         notes:          r.notes          || '',
