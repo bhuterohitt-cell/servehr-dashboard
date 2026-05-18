@@ -1644,6 +1644,7 @@ function openAddBrochure(){
   ['nb-company','nb-address','nb-contact','nb-phone','nb-notes'].forEach(id=>document.getElementById(id).value='');
 }
 
+// ─── FIX: submitNewBrochure uses column names that now exist in DB ───
 async function submitNewBrochure(){
   const company=document.getElementById('nb-company').value.trim();
   if(!company){showToast('Company name required',true);return;}
@@ -1651,13 +1652,13 @@ async function submitNewBrochure(){
   statusEl.textContent='Saving…';
   const body={
     company,
-    area:'Other',
-    address:document.getElementById('nb-address').value.trim(),
-    contact_person:document.getElementById('nb-contact').value.trim(),
-    contact_phone:document.getElementById('nb-phone').value.trim(),
-    status:document.getElementById('nb-status-select').value,
-    notes:document.getElementById('nb-notes').value.trim(),
-    assigned_to:currentUser.name
+    area:       'Other',
+    address:    document.getElementById('nb-address').value.trim(),
+    contact_person: document.getElementById('nb-contact').value.trim(),
+    contact_phone:  document.getElementById('nb-phone').value.trim(),
+    status:     document.getElementById('nb-status-select').value,
+    notes:      document.getElementById('nb-notes').value.trim(),
+    assigned_to: currentUser.name
   };
   try{
     const r=await sb('brochure_tracker',{method:'POST',body});
@@ -1674,7 +1675,9 @@ async function submitNewBrochure(){
 // ══════════════════════════════════════════════════════
 // CSV BULK IMPORT
 // ══════════════════════════════════════════════════════
-// NOTE: contact_email is intentionally excluded — column does not exist in brochure_tracker table
+// Columns that actually exist in brochure_tracker after running the migration SQL:
+// company, area, address, contact_person, contact_phone, status, dispatched_date, notes, assigned_to
+// NOTE: contact_email is intentionally excluded — it does not exist in the table.
 const CSV_TARGET_FIELDS = [
   {key:'company',       label:'Company Name',   required:true,  aliases:['company','company_name','name','firm','organisation','organization','business','entity','client']},
   {key:'address',       label:'Address',        required:false, aliases:['address','addr','location','office_address','full_address','office','place']},
@@ -1685,7 +1688,6 @@ const CSV_TARGET_FIELDS = [
 
 function openCsvImport(){
   csvParsedRows=[]; csvHeaders=[]; csvMapping={};
-  // reset file input so same file can be re-selected
   document.getElementById('csv-file-input').value='';
   csvGoToStep(1);
   document.getElementById('csv-import-modal').classList.add('open');
@@ -1829,6 +1831,7 @@ function buildPreview(){
   btn.textContent=valid.length?`Import ${valid.length} Row${valid.length!==1?'s':''}  →`:'No valid rows';
 }
 
+// ─── FIX: executeCsvImport only sends columns that exist in the DB ───
 async function executeCsvImport(){
   const mappedRows=(csvParsedRows._mapped||[]).filter(r=>r._valid);
   if(!mappedRows.length){showToast('No valid rows to import',true);return;}
@@ -1846,22 +1849,23 @@ async function executeCsvImport(){
   for(const batch of batches){
     const results = await Promise.allSettled(
       batch.map(r => sb('brochure_tracker',{method:'POST',body:{
-        company:    r.company,
-        area:       'Other',
-        address:    r.address||'',
-        contact_person: r.contact_person||'',
-        contact_phone:  r.contact_phone||'',
-        status:     'Pending',
+        company:        r.company,
+        area:           'Other',
+        address:        r.address        || '',
+        contact_person: r.contact_person || '',   // ← fixed column name
+        contact_phone:  r.contact_phone  || '',   // ← fixed column name
+        status:         'Pending',
         dispatched_date: null,
-        notes:      r.notes||'',
-        assigned_to: currentUser.name
+        notes:          r.notes          || '',
+        assigned_to:    currentUser.name
       }}))
     );
     results.forEach(res=>{
       if(res.status==='fulfilled'&&Array.isArray(res.value)){
         allBrochures.push(...res.value); done++;
       } else {
-        console.error('Import row failed:', res.reason||res.value); failed++;
+        console.error('Import row failed:', res.reason);
+        failed++;
       }
     });
     const pct=Math.round((done+failed)/mappedRows.length*100);
