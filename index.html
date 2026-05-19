@@ -39,7 +39,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 .login-btn{width:100%;background:var(--green);border:none;color:#fff;font-family:var(--font);font-size:13px;font-weight:700;padding:12px;border-radius:var(--r);cursor:pointer;transition:all .2s;}
 .login-btn:hover{background:#15803d;}
 .login-error{font-size:11px;color:var(--danger);margin-top:8px;display:none;padding:7px 11px;background:var(--danger-dim);border-radius:var(--r-sm);border:1px solid rgba(220,38,38,0.2);}
-.login-error.show{display:block;}
 .login-members{margin-top:20px;padding-top:16px;border-top:1px solid var(--border);}
 .login-members-label{font-size:10px;color:var(--muted);margin-bottom:10px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.1em;}
 .member-chip{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:var(--r-sm);background:var(--surface2);border:1px solid var(--border);margin-bottom:5px;cursor:pointer;transition:all .15s;}
@@ -150,6 +149,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 .pipeline-col-add-note:hover{border-color:var(--green);color:var(--green);background:var(--green-dim);}
 .pipeline-col-bar{height:3px;border-radius:0 0 var(--r) var(--r);}
 .pipeline-arrow{color:var(--muted);font-size:16px;display:flex;align-items:center;padding-top:28px;flex-shrink:0;}
+.pipeline-dead-arrow{color:var(--dead);font-size:14px;display:flex;align-items:center;padding-top:28px;flex-shrink:0;opacity:0.5;}
+.pipeline-dead-divider{display:flex;align-items:flex-start;padding-top:20px;flex-shrink:0;}
+.pipeline-dead-divider-line{width:1px;height:calc(100% - 20px);background:var(--border2);border-left:2px dashed var(--border2);}
 .dead-separator{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:24px;gap:3px;flex-shrink:0;}
 .dead-sep-line{width:1px;height:40px;background:rgba(100,116,139,0.3);}
 .dead-sep-label{font-size:8px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;writing-mode:horizontal-tb;white-space:nowrap;font-family:var(--mono);}
@@ -321,7 +323,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 .progress-track{height:4px;background:var(--surface3);border-radius:2px;overflow:hidden;}
 .progress-fill{height:100%;border-radius:2px;transition:width 1s cubic-bezier(.4,0,.2,1);}
 
-/* CSV IMPORT */
+/* ── CSV IMPORT ─────────────────────────────────── */
 .csv-drop-zone{border:2px dashed var(--border2);border-radius:var(--r);padding:28px 20px;text-align:center;cursor:pointer;transition:all .2s;background:var(--surface2);margin-bottom:14px;}
 .csv-drop-zone:hover,.csv-drop-zone.dz-over{border-color:var(--green);background:var(--green-dim);}
 .csv-drop-icon{font-size:32px;margin-bottom:8px;}
@@ -488,6 +490,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
         <div class="stat-card revenue" onclick="drillDown('revenue')">
           <div class="label">Revenue Won</div>
           <div class="value" id="ov-revenue">—</div>
+          <div class="sub" style="font-size:9px;color:var(--muted);">Payment Received stage</div>
           <div class="split" id="ov-rev-split"></div>
           <div class="glow" style="background:var(--cyan);"></div>
         </div>
@@ -498,9 +501,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
           <div class="glow" style="background:var(--orange);"></div>
         </div>
         <div class="stat-card brochure" onclick="drillDown('brochure')">
-          <div class="label">Total Brochures</div>
+          <div class="label">Brochures Sent</div>
           <div class="value" id="ov-brochures">—</div>
-          <div class="sub" id="ov-brochures-sub">in your tracker</div>
+          <div class="sub">of 100 weekly target</div>
           <div class="glow" style="background:var(--purple-light);"></div>
         </div>
         <div class="stat-card dead" onclick="drillDown('dead')">
@@ -538,13 +541,13 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
         <div class="card">
           <div class="section-title">Compliance Alerts Today</div>
           <div id="today-alerts"></div>
-          <div class="section-title" style="margin-top:14px;">Brochure Progress (Weekly)</div>
+          <div class="section-title" style="margin-top:14px;">Brochure Progress</div>
           <div style="display:flex;align-items:center;gap:16px;">
             <div class="brochure-num" id="ov-bro-count" style="font-size:36px;">0</div>
             <div class="brochure-info">
-              <div style="font-size:12px;color:var(--text2);margin-bottom:8px;">Sent toward <strong>100</strong> weekly target</div>
+              <div style="font-size:12px;color:var(--text2);margin-bottom:8px;">Target: <strong>100</strong> this week</div>
               <div class="brochure-big-bar"><div class="brochure-big-fill" id="ov-bro-bar" style="width:0%"></div></div>
-              <div style="font-size:10px;color:var(--muted);margin-top:4px;" id="ov-bro-pct">0% of weekly target</div>
+              <div style="font-size:10px;color:var(--muted);margin-top:4px;" id="ov-bro-pct">0% complete</div>
             </div>
           </div>
         </div>
@@ -593,9 +596,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
       <div class="brochure-hero">
         <div class="brochure-num" id="bro-count">0</div>
         <div class="brochure-info">
-          <div style="font-size:12px;color:var(--text2);margin-bottom:8px;">Weekly target: <strong>100 brochures sent</strong></div>
+          <div style="font-size:12px;color:var(--text2);margin-bottom:8px;">Weekly target: <strong>100 brochures</strong></div>
           <div class="brochure-big-bar"><div class="brochure-big-fill" id="bro-bar" style="width:0%"></div></div>
-          <div style="font-size:11px;color:var(--muted);margin-top:4px;" id="bro-pct">0 / 100 sent</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px;" id="bro-pct">0 / 100</div>
         </div>
         <div style="display:flex;gap:8px;margin-left:auto;flex-wrap:wrap;">
           <button class="import-csv-btn" onclick="openCsvImport()">⬆ Import CSV</button>
@@ -721,7 +724,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
   </div>
 </div>
 
-<!-- MODALS -->
+<!-- ══ MODALS ══ -->
 
 <!-- CONTACT MODAL -->
 <div class="modal-overlay" id="contact-modal">
@@ -803,7 +806,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
   </div>
 </div>
 
-<!-- ADD BROCHURE MODAL -->
+<!-- ADD BROCHURE MODAL (no area field) -->
 <div class="modal-overlay" id="add-brochure-modal">
   <div class="modal add-modal">
     <button class="modal-close" onclick="closeModal('add-brochure-modal')">✕</button>
@@ -816,6 +819,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
       <div class="form-group full"><label class="form-label">Address</label><input type="text" class="form-input" id="nb-address" placeholder="Full address"/></div>
       <div class="form-group"><label class="form-label">Contact Person</label><input type="text" class="form-input" id="nb-contact" placeholder="Name"/></div>
       <div class="form-group"><label class="form-label">Phone</label><input type="text" class="form-input" id="nb-phone" placeholder="+91…"/></div>
+      <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="nb-email" placeholder="email@company.com"/></div>
       <div class="form-group"><label class="form-label">Status</label>
         <select class="form-select" id="nb-status-select">
           <option value="Pending">Pending</option>
@@ -831,17 +835,20 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
   </div>
 </div>
 
-<!-- CSV IMPORT MODAL -->
+<!-- ══ CSV IMPORT MODAL ══ -->
 <div class="modal-overlay" id="csv-import-modal">
   <div class="modal" style="max-width:720px;">
     <button class="modal-close" onclick="closeModal('csv-import-modal')">✕</button>
     <div class="modal-title">⬆ Bulk Import Brochures via CSV</div>
+
+    <!-- Step indicators -->
     <div class="csv-step-indicator" id="csv-steps">
       <div class="csv-step active" id="csv-step-ind-1"></div>
       <div class="csv-step" id="csv-step-ind-2"></div>
       <div class="csv-step" id="csv-step-ind-3"></div>
     </div>
-    <!-- Step 1 -->
+
+    <!-- Step 1: Drop Zone + Template -->
     <div id="csv-step-1">
       <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Step 1 — Upload your file. Any column names work — you'll map them next.</div>
       <div class="csv-drop-zone" id="csv-drop-zone" onclick="document.getElementById('csv-file-input').click()"
@@ -856,19 +863,28 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
         <div style="font-family:var(--mono);font-size:10px;color:var(--muted);line-height:1.8;">
           <strong style="color:var(--text);">Company:</strong> company, company_name, name, firm, organisation, business<br>
           <strong style="color:var(--text);">Address:</strong> address, addr, location, office_address, full_address<br>
-          <strong style="color:var(--text);">Contact:</strong> contact, contact_person, contact_name, person<br>
+          <strong style="color:var(--text);">Contact:</strong> contact, contact_person, contact_name, person, name (if no company col)<br>
           <strong style="color:var(--text);">Phone:</strong> phone, mobile, contact_phone, tel, number, ph<br>
+          <strong style="color:var(--text);">Email:</strong> email, contact_email, mail, e_mail<br>
           <strong style="color:var(--text);">Notes:</strong> notes, remarks, comment
         </div>
         <div style="margin-top:10px;"><button class="import-csv-btn" onclick="downloadCsvTemplate()">⬇ Download Template</button></div>
       </div>
     </div>
-    <!-- Step 2 -->
+
+    <!-- Step 2: Field Mapping -->
     <div id="csv-step-2" style="display:none;">
       <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Step 2 — Match your columns. Required: <strong style="color:var(--text);">Company</strong>. Everything else is optional.</div>
       <div style="overflow-x:auto;margin-bottom:12px;">
         <table class="csv-mapper-table">
-          <thead><tr><th>Your CSV Column</th><th>Sample Data</th><th>Maps To →</th><th>Auto-detected</th></tr></thead>
+          <thead>
+            <tr>
+              <th>Your CSV Column</th>
+              <th>Sample Data</th>
+              <th>Maps To →</th>
+              <th>Auto-detected</th>
+            </tr>
+          </thead>
           <tbody id="csv-mapper-body"></tbody>
         </table>
       </div>
@@ -877,7 +893,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
         <button class="do-import-btn" id="csv-map-next-btn" onclick="csvConfirmMapping()">Preview Rows →</button>
       </div>
     </div>
-    <!-- Step 3 -->
+
+    <!-- Step 3: Preview + Import -->
     <div id="csv-step-3" style="display:none;">
       <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Step 3 — Review and import.</div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
@@ -889,7 +906,12 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
       </div>
       <div class="csv-preview-wrap">
         <table class="csv-preview-table">
-          <thead><tr><th>#</th><th>Company</th><th>Address</th><th>Contact</th><th>Phone</th><th>Notes</th></tr></thead>
+          <thead>
+            <tr>
+              <th>#</th><th>Company</th><th>Address</th>
+              <th>Contact</th><th>Phone</th><th>Email</th><th>Notes</th>
+            </tr>
+          </thead>
           <tbody id="csv-preview-body"></tbody>
         </table>
       </div>
@@ -902,6 +924,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
         <button class="do-import-btn" id="do-import-btn" onclick="executeCsvImport()">Import All Rows →</button>
       </div>
     </div>
+
   </div>
 </div>
 
@@ -970,6 +993,9 @@ const DEFAULT_PASS = 'servehr2024';
 const MANAGER_PASS = 'manager2024';
 const MEMBER_COLORS = ['#16a34a','#2563eb','#7c3aed','#ea580c','#0891b2','#ca8a04','#dc2626'];
 
+// ══════════════════════════════════════════════════════
+// PIPELINE STAGES CONFIG
+// ══════════════════════════════════════════════════════
 const PIPELINE_STAGES = [
   {key:'New Lead',           label:'New Lead',          color:'#7c3aed', bg:'rgba(124,58,237,.1)'},
   {key:'Not Responded',      label:'Not Responded',     color:'#ca8a04', bg:'rgba(202,138,4,.1)'},
@@ -981,7 +1007,7 @@ const PIPELINE_STAGES = [
   {key:'Checklist Sent',     label:'Checklist Sent',    color:'#ca8a04', bg:'rgba(202,138,4,.1)'},
   {key:'Data Received',      label:'Data Received',     color:'#2563eb', bg:'rgba(37,99,235,.1)'},
   {key:'Invoice Raised',     label:'Invoice Raised',    color:'#7c3aed', bg:'rgba(124,58,237,.1)'},
-  {key:'Payment Received',   label:'Payment Received',  color:'#16a34a', bg:'rgba(22,163,74,.1)'},
+  {key:'Payment Received',   label:'Payment Received ★',color:'#16a34a', bg:'rgba(22,163,74,.15)', isWon:true},
   {key:'Won',                label:'Won ★',             color:'#16a34a', bg:'rgba(22,163,74,.15)', isWon:true},
   {key:'Dead Horse',         label:'Dead Horse 🐴',     color:'#64748b', bg:'rgba(100,116,139,.1)'},
 ];
@@ -1015,6 +1041,9 @@ function classifyScope(raw) {
   return {label: raw.length > 20 ? raw.slice(0,18)+'…' : raw, cls:'scope-other'};
 }
 
+// Helper: 'Payment Received' is the new Won — also handles legacy 'Won' status
+function isWon(l){ return l.status==='Payment Received'||l.status==='Won'; }
+
 // ══════════════════════════════════════════════════════
 // STATE
 // ══════════════════════════════════════════════════════
@@ -1023,7 +1052,7 @@ let allLeads = [], allBrochures = [], allJournal = [], allMembers = [], allNotif
 let manualFollowUps = [];
 let currentNoteLeadId = null, currentMeetingLeadId = null;
 let chartInstances = {};
-let csvParsedRows = [], csvHeaders = [], csvMapping = {}, csvMappedRows = [];
+let csvParsedRows = [], csvHeaders = [], csvMapping = {};
 
 // ══════════════════════════════════════════════════════
 // SUPABASE
@@ -1243,18 +1272,13 @@ function renderOverview(){
   const oneTimeLeads=leads.filter(l=>(l.activity_type||'').toLowerCase().includes('one'));
   const deadLeads=leads.filter(l=>l.status==='Dead Horse'||l.priority==='Dead Horse');
   const activeLeads=leads.filter(l=>l.status!=='Dead Horse'&&l.priority!=='Dead Horse');
-  const wonLeads=leads.filter(l=>l.status==='Won');
+  const wonLeads=leads.filter(l=>isWon(l));
   const monthlyWon=wonLeads.filter(l=>(l.activity_type||'Monthly').toLowerCase().includes('month'));
   const onetimeWon=wonLeads.filter(l=>(l.activity_type||'').toLowerCase().includes('one'));
   const totalRev=wonLeads.reduce((s,l)=>s+(parseFloat(l.quoted_fees)||0),0);
   const monthlyRev=monthlyWon.reduce((s,l)=>s+(parseFloat(l.quoted_fees)||0),0);
   const onetimeRev=onetimeWon.reduce((s,l)=>s+(parseFloat(l.quoted_fees)||0),0);
   const highPri=activeLeads.filter(l=>l.priority==='High');
-
-  // ── BROCHURE COUNTS ──────────────────────────────────
-  // Stat card: total brochures in tracker (all statuses)
-  const totalBrochures = brochures.length;
-  // Progress bar: only sent/dispatched toward the weekly 100 target
   const sentB=brochures.filter(b=>b.status==='Sent'||b.status==='Dispatched').length;
   const broP=Math.min(100,Math.round(sentB/100*100));
 
@@ -1263,20 +1287,14 @@ function renderOverview(){
   document.getElementById('ov-revenue').textContent=fmtRev(totalRev);
   document.getElementById('ov-rev-split').innerHTML=`<div class="split-item">Monthly: <span class="split-val" style="color:var(--cyan);">${fmtRev(monthlyRev)}</span></div><div class="split-item">OTA: <span class="split-val" style="color:var(--blue);">${fmtRev(onetimeRev)}</span></div>`;
   document.getElementById('ov-priority').textContent=highPri.length;
-
-  // ── UPDATED: show total brochures on stat card ───────
-  document.getElementById('ov-brochures').textContent=totalBrochures;
-  document.getElementById('ov-brochures-sub').textContent=sentB > 0 ? sentB+' sent this week' : 'in your tracker';
-
+  document.getElementById('ov-brochures').textContent=sentB;
   document.getElementById('ov-dead').textContent=deadLeads.length;
-
-  // Progress bar still tracks "sent" toward the weekly target
   document.getElementById('ov-bro-count').textContent=sentB;
   document.getElementById('ov-bro-bar').style.width=broP+'%';
-  document.getElementById('ov-bro-pct').textContent=broP+'% of weekly target';
+  document.getElementById('ov-bro-pct').textContent=broP+'% complete';
 
-  const mlRev=monthlyLeads.filter(l=>l.status==='Won').reduce((s,l)=>s+(parseFloat(l.quoted_fees)||0),0);
-  const olRev=oneTimeLeads.filter(l=>l.status==='Won').reduce((s,l)=>s+(parseFloat(l.quoted_fees)||0),0);
+  const mlRev=monthlyLeads.filter(l=>isWon(l)).reduce((s,l)=>s+(parseFloat(l.quoted_fees)||0),0);
+  const olRev=oneTimeLeads.filter(l=>isWon(l)).reduce((s,l)=>s+(parseFloat(l.quoted_fees)||0),0);
   document.getElementById('monthly-rev-label').textContent=mlRev>0?fmtRev(mlRev)+' won':'';
   document.getElementById('monthly-count-label').textContent=monthlyLeads.length+' leads';
   document.getElementById('onetime-rev-label').textContent=olRev>0?fmtRev(olRev)+' won':'';
@@ -1285,8 +1303,8 @@ function renderOverview(){
   renderPipeline(monthlyLeads,'pipeline-monthly');
   renderPipeline(oneTimeLeads,'pipeline-onetime');
 
-  const activeStages=['New Lead','Quotation Sent','Proposal Sent','Onboarding Meeting','Closed','Checklist Sent','Data Received','Invoice Raised','Payment Received','Won'];
-  const stageColors={'New Lead':'#7c3aed','Quotation Sent':'#2563eb','Proposal Sent':'#2563eb','Onboarding Meeting':'#ea580c','Closed':'#0891b2','Checklist Sent':'#ca8a04','Data Received':'#2563eb','Invoice Raised':'#7c3aed','Payment Received':'#16a34a','Won':'#16a34a'};
+  const activeStages=['New Lead','Quotation Sent','Proposal Sent','Onboarding Meeting','Closed','Checklist Sent','Data Received','Invoice Raised','Payment Received'];
+  const stageColors={'New Lead':'#7c3aed','Quotation Sent':'#2563eb','Proposal Sent':'#2563eb','Onboarding Meeting':'#ea580c','Closed':'#0891b2','Checklist Sent':'#ca8a04','Data Received':'#2563eb','Invoice Raised':'#7c3aed','Payment Received':'#16a34a'};
   document.getElementById('pipeline-bars').innerHTML=activeStages.map(s=>{
     const n=activeLeads.filter(l=>l.status===s).length;
     const p=activeLeads.length?Math.round(n/activeLeads.length*100):0;
@@ -1321,7 +1339,7 @@ function scopeBadgeClass(s){
 }
 
 // ══════════════════════════════════════════════════════
-// PIPELINE
+// PIPELINE — Dead Horse moved to LEFT for quick discard
 // ══════════════════════════════════════════════════════
 let dragLeadId=null;
 
@@ -1329,6 +1347,7 @@ function renderPipeline(leads, targetId) {
   const el=document.getElementById(targetId);
   if(!el) return;
 
+  // Active pipeline stages (excluding dead)
   const activeStages = [
     'New Lead',
     'Quotation Sent','Proposal Sent','Onboarding Meeting',
@@ -1377,12 +1396,16 @@ function renderPipeline(leads, targetId) {
   function deadArrow() { return '<div class="dead-separator"><div class="dead-sep-line"></div><div class="dead-sep-label">discard</div><div class="dead-sep-line"></div></div>'; }
 
   let html = '';
+  // ── DEAD HORSE FIRST (quick discard on the left) ──
   html += makeCol(deadStage, leads);
   html += deadArrow();
+
+  // ── ACTIVE STAGES ──
   for(let i=0; i<activeStages.length; i++) {
     html += makeCol(activeStages[i], leads);
     if(i < activeStages.length - 1) html += arrow();
   }
+
   el.innerHTML = html;
 }
 
@@ -1533,8 +1556,8 @@ function drillDown(type){
       ...onetime.map(l=>({label:l.company,sub:l.status+' · '+(l.contact_name||''),rev:l.quoted_fees})),
     ];
   } else if(type==='revenue'){
-    title='Revenue Won';
-    const won=leads.filter(l=>l.status==='Won');
+    title='Revenue Won (Payment Received)';
+    const won=leads.filter(l=>isWon(l));
     const mWon=won.filter(l=>(l.activity_type||'Monthly').toLowerCase().includes('month'));
     const oWon=won.filter(l=>(l.activity_type||'').toLowerCase().includes('one'));
     items=[
@@ -1547,18 +1570,8 @@ function drillDown(type){
     title='High Priority Leads';
     items=leads.filter(l=>l.priority==='High'&&l.status!=='Dead Horse').map(l=>({label:l.company,sub:l.status+' · '+(l.contact_name||''),rev:l.quoted_fees}));
   } else if(type==='brochure'){
-    // ── UPDATED: show all brochures with status breakdown ──
-    title='All Brochures';
-    const sent=brochures.filter(b=>b.status==='Sent'||b.status==='Dispatched');
-    const pending=brochures.filter(b=>b.status==='Pending'||!b.status);
-    const other=brochures.filter(b=>b.status&&b.status!=='Sent'&&b.status!=='Dispatched'&&b.status!=='Pending');
-    items=[
-      {label:'Sent / Dispatched',sub:sent.length+' brochures',bold:true},
-      ...sent.map(b=>({label:b.company,sub:(b.area?b.area+' · ':'')+(b.dispatched_date||'')})),
-      {label:'Pending',sub:pending.length+' brochures',bold:true},
-      ...pending.map(b=>({label:b.company,sub:b.address||''})),
-      ...(other.length?[{label:'Other',sub:other.length+' brochures',bold:true},...other.map(b=>({label:b.company,sub:b.status||''}))]: []),
-    ];
+    title='Brochures Sent';
+    items=brochures.filter(b=>b.status==='Sent'||b.status==='Dispatched').map(b=>({label:b.company,sub:(b.area?b.area+' · ':'')+( b.dispatched_date||'')}));
   } else if(type==='dead'){
     title='Dead Horses — No Follow-up';
     items=leads.filter(l=>l.status==='Dead Horse'||l.priority==='Dead Horse').map(l=>({label:l.company,sub:l.status+' · '+(l.contact_name||'')}));
@@ -1622,7 +1635,7 @@ async function updateLeadStatus(id,status){
 }
 
 // ══════════════════════════════════════════════════════
-// BROCHURE
+// BROCHURE — single table, no area
 // ══════════════════════════════════════════════════════
 function renderBrochure(){
   const b=getMyBrochures();
@@ -1663,7 +1676,7 @@ async function toggleBrochure(id,cur){
 function openAddBrochure(){
   document.getElementById('add-brochure-modal').classList.add('open');
   document.getElementById('nb-status').textContent='';
-  ['nb-company','nb-address','nb-contact','nb-phone','nb-notes'].forEach(id=>document.getElementById(id).value='');
+  ['nb-company','nb-address','nb-contact','nb-phone','nb-email','nb-notes'].forEach(id=>document.getElementById(id).value='');
 }
 
 async function submitNewBrochure(){
@@ -1673,13 +1686,14 @@ async function submitNewBrochure(){
   statusEl.textContent='Saving…';
   const body={
     company,
-    area:       'Other',
-    address:    document.getElementById('nb-address').value.trim(),
-    contact_person: document.getElementById('nb-contact').value.trim(),
-    contact_phone:  document.getElementById('nb-phone').value.trim(),
-    status:     document.getElementById('nb-status-select').value,
-    notes:      document.getElementById('nb-notes').value.trim(),
-    assigned_to: currentUser.name
+    area:'Other',
+    address:document.getElementById('nb-address').value.trim(),
+    contact_person:document.getElementById('nb-contact').value.trim(),
+    contact_phone:document.getElementById('nb-phone').value.trim(),
+    contact_email:document.getElementById('nb-email').value.trim(),
+    status:document.getElementById('nb-status-select').value,
+    notes:document.getElementById('nb-notes').value.trim(),
+    assigned_to:currentUser.name
   };
   try{
     const r=await sb('brochure_tracker',{method:'POST',body});
@@ -1694,19 +1708,21 @@ async function submitNewBrochure(){
 }
 
 // ══════════════════════════════════════════════════════
-// CSV BULK IMPORT
+// CSV BULK IMPORT — with field mapping step
 // ══════════════════════════════════════════════════════
+
+// Target fields we want to map to
 const CSV_TARGET_FIELDS = [
-  {key:'company',       label:'Company Name',   required:true,  aliases:['company','company_name','name','firm','organisation','organization','business','entity','client']},
-  {key:'address',       label:'Address',        required:false, aliases:['address','addr','location','office_address','full_address','office','place']},
-  {key:'contact_person',label:'Contact Person', required:false, aliases:['contact','contact_person','contact_name','person','contact person','person_name','representative','hr','hr_name']},
-  {key:'contact_phone', label:'Phone',          required:false, aliases:['phone','mobile','contact_phone','tel','number','ph','cell','contact_number','mob']},
-  {key:'notes',         label:'Notes',          required:false, aliases:['notes','remarks','comment','comments','note','remark','description']},
+  {key:'company',    label:'Company Name', required:true,  aliases:['company','company_name','name','firm','organisation','organization','business','entity','client']},
+  {key:'address',    label:'Address',      required:false, aliases:['address','addr','location','office_address','full_address','office','place']},
+  {key:'contact_person', label:'Contact Person', required:false, aliases:['contact','contact_person','contact_name','person','contact person','person_name','representative','hr','hr_name']},
+  {key:'contact_phone',  label:'Phone',    required:false, aliases:['phone','mobile','contact_phone','tel','number','ph','cell','contact_number','mob']},
+  {key:'contact_email',  label:'Email',    required:false, aliases:['email','contact_email','mail','e_mail','e-mail','email_id']},
+  {key:'notes',      label:'Notes',        required:false, aliases:['notes','remarks','comment','comments','note','remark','description']},
 ];
 
 function openCsvImport(){
   csvParsedRows=[]; csvHeaders=[]; csvMapping={};
-  document.getElementById('csv-file-input').value='';
   csvGoToStep(1);
   document.getElementById('csv-import-modal').classList.add('open');
 }
@@ -1758,6 +1774,7 @@ function splitCsvLine(line){
   return result;
 }
 
+// Auto-detect: for each CSV column, find best matching target field
 function autoDetectMapping(){
   csvMapping={};
   csvHeaders.forEach(h=>{
@@ -1778,14 +1795,18 @@ function autoDetectMapping(){
 
 function showMappingStep(){
   const tbody=document.getElementById('csv-mapper-body');
+  // Get sample values from first data row
   const sample=csvParsedRows[0]||{};
+
   tbody.innerHTML=csvHeaders.map(h=>{
     const mapped=csvMapping[h]||'skip';
     const sampleVal=(sample[h]||'').slice(0,30);
     const isAutoDetected=mapped!=='skip';
     const selectCls=mapped==='company'?'csv-map-select mapped-required':mapped!=='skip'?'csv-map-select mapped-optional':'csv-map-select';
+
     const options=`<option value="skip">— Skip —</option>`+
       CSV_TARGET_FIELDS.map(tf=>`<option value="${tf.key}" ${mapped===tf.key?'selected':''}>${tf.label}${tf.required?' *':''}</option>`).join('');
+
     return `<tr>
       <td><span class="csv-col-name">${h}</span></td>
       <td><span class="csv-sample">${sampleVal||'(empty)'}</span></td>
@@ -1793,13 +1814,16 @@ function showMappingStep(){
       <td style="font-size:10px;color:${isAutoDetected?'var(--green)':'var(--muted)'};">${isAutoDetected?'✓ Auto':'—'}</td>
     </tr>`;
   }).join('');
+
   csvGoToStep(2);
 }
 
 function onMappingChange(sel){
   const col=sel.getAttribute('data-col');
   const val=sel.value;
+  // Prevent duplicate mappings (except skip)
   if(val!=='skip'){
+    // Clear any other column mapped to the same field
     document.querySelectorAll('#csv-mapper-body select').forEach(s=>{
       if(s!==sel && s.value===val){ s.value='skip'; csvMapping[s.getAttribute('data-col')]='skip'; s.className='csv-map-select'; }
     });
@@ -1809,6 +1833,7 @@ function onMappingChange(sel){
 }
 
 function csvConfirmMapping(){
+  // Check company is mapped
   const hasCompany=Object.values(csvMapping).includes('company');
   if(!hasCompany){showToast('You must map a column to "Company Name"',true);return;}
   buildPreview();
@@ -1816,6 +1841,7 @@ function csvConfirmMapping(){
 }
 
 function buildPreview(){
+  // Apply mapping to build normalised rows
   const mappedRows=csvParsedRows.map(row=>{
     const out={_row:row._row};
     Object.entries(csvMapping).forEach(([col,field])=>{
@@ -1839,9 +1865,11 @@ function buildPreview(){
       <td style="font-size:10px;">${r.address||''}</td>
       <td>${r.contact_person||''}</td>
       <td style="font-family:var(--mono);font-size:10px;">${r.contact_phone||''}</td>
+      <td style="font-size:10px;color:var(--muted);">${r.contact_email||''}</td>
       <td style="font-size:10px;color:var(--muted);max-width:100px;overflow:hidden;text-overflow:ellipsis;">${r.notes||''}</td>
     </tr>`).join('');
 
+  // Store normalised rows for import
   csvParsedRows._mapped=mappedRows;
 
   const btn=document.getElementById('do-import-btn');
@@ -1856,35 +1884,34 @@ async function executeCsvImport(){
   const btn=document.getElementById('do-import-btn');
   btn.disabled=true; btn.textContent='Importing…';
   document.getElementById('csv-import-progress').style.display='block';
-  document.getElementById('csv-progress-fill').style.width='0%';
 
   let done=0, failed=0;
+  const today=new Date().toISOString().split('T')[0];
   const batchSize=10;
   const batches=[];
   for(let i=0;i<mappedRows.length;i+=batchSize) batches.push(mappedRows.slice(i,i+batchSize));
 
   for(const batch of batches){
-    const results = await Promise.allSettled(
-      batch.map(r => sb('brochure_tracker',{method:'POST',body:{
-        company:        r.company,
-        area:           'Other',
-        address:        r.address        || '',
-        contact_person: r.contact_person || '',
-        contact_phone:  r.contact_phone  || '',
-        status:         'Pending',
-        dispatched_date: null,
-        notes:          r.notes          || '',
-        assigned_to:    currentUser.name
-      }}))
-    );
-    results.forEach(res=>{
-      if(res.status==='fulfilled'&&Array.isArray(res.value)){
-        allBrochures.push(...res.value); done++;
-      } else {
-        console.error('Import row failed:', res.reason);
-        failed++;
-      }
-    });
+    const bodies=batch.map(r=>({
+      company:r.company,
+      area:'Other',
+      address:r.address||'',
+      contact_person:r.contact_person||'',
+      contact_phone:r.contact_phone||'',
+      contact_email:r.contact_email||'',
+      status:'Pending',
+      dispatched_date:null,
+      notes:r.notes||'',
+      assigned_to:currentUser.name
+    }));
+    try{
+      const result=await sb('brochure_tracker',{method:'POST',body:bodies});
+      if(Array.isArray(result)) allBrochures.push(...result);
+      done+=batch.length;
+    }catch(e){
+      console.error('Batch failed:',e);
+      failed+=batch.length;
+    }
     const pct=Math.round((done+failed)/mappedRows.length*100);
     document.getElementById('csv-progress-fill').style.width=pct+'%';
     document.getElementById('csv-progress-text').textContent=`Imported ${done} / ${mappedRows.length}…${failed?' ('+failed+' failed)':''}`;
@@ -1899,9 +1926,9 @@ async function executeCsvImport(){
 }
 
 function downloadCsvTemplate(){
-  const header='company,address,contact_person,contact_phone,notes\n';
-  const s1='ABC Pharma Pvt Ltd,Plot 12 TTC Industrial Area Turbhe,Rahul Shah,9876543210,Interested in compliance\n';
-  const s2='XYZ Chemicals Ltd,Sector 7 Taloja MIDC,Priya Menon,9123456789,\n';
+  const header='company,address,contact_person,contact_phone,contact_email,notes\n';
+  const s1='ABC Pharma Pvt Ltd,Plot 12 TTC Industrial Area Turbhe,Rahul Shah,9876543210,rahul@abcpharma.com,Interested in compliance\n';
+  const s2='XYZ Chemicals Ltd,Sector 7 Taloja MIDC,Priya Menon,9123456789,,\n';
   const s3='Omega Textiles,Phase 2 Dombivli MIDC,,,\n';
   const blob=new Blob([header+s1+s2+s3],{type:'text/csv'});
   const url=URL.createObjectURL(blob);
@@ -1924,7 +1951,7 @@ function mkChart(id,type,data,options={}){
 
 function renderAnalytics(){
   const leads=getMyLeads();
-  const won=leads.filter(l=>l.status==='Won');
+  const won=leads.filter(l=>isWon(l));
   const monthly=leads.filter(l=>(l.activity_type||'Monthly').toLowerCase().includes('month'));
   const onetime=leads.filter(l=>(l.activity_type||'').toLowerCase().includes('one'));
   const totalRev=won.reduce((s,l)=>s+(parseFloat(l.quoted_fees)||0),0);
@@ -1963,14 +1990,14 @@ function renderAnalytics(){
   mkChart('chart-scope','bar',{labels:scopeArr.map(([k])=>k.length>18?k.slice(0,16)+'…':k),datasets:[{label:'Count',data:scopeArr.map(([,v])=>v),backgroundColor:'rgba(124,58,237,0.6)',borderColor:'#7c3aed',borderWidth:1}]},{plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#475569',font:{size:9}}},y:{ticks:{color:'#475569',stepSize:1},beginAtZero:true}}});
 
   const wonCount=won.length;
-  const inProgress=leads.filter(l=>!['New Lead','Not Responded','Not Interested','Dead Horse','Won'].includes(l.status)).length;
+  const inProgress=leads.filter(l=>!['New Lead','Not Responded','Not Interested','Dead Horse','Won','Payment Received'].includes(l.status)).length;
   const notResp=leads.filter(l=>l.status==='Not Responded').length;
   const notInt=leads.filter(l=>l.status==='Not Interested').length;
   const newL=leads.filter(l=>l.status==='New Lead').length;
-  mkChart('chart-response','doughnut',{labels:['Won','In Progress','New Lead','Not Responded','Not Interested'],datasets:[{data:[wonCount,inProgress,newL,notResp,notInt],backgroundColor:['#16a34a','#2563eb','#7c3aed','#ca8a04','#64748b'],borderWidth:0}]},{plugins:{legend:{position:'right',labels:{boxWidth:10,padding:8,color:'#475569',font:{size:10}}}}});
+  mkChart('chart-response','doughnut',{labels:['Won / Paid','In Progress','New Lead','Not Responded','Not Interested'],datasets:[{data:[wonCount,inProgress,newL,notResp,notInt],backgroundColor:['#16a34a','#2563eb','#7c3aed','#ca8a04','#64748b'],borderWidth:0}]},{plugins:{legend:{position:'right',labels:{boxWidth:10,padding:8,color:'#475569',font:{size:10}}}}});
 
   if(isManager(currentUser)){
-    const memberRevs=allMembers.map(m=>{const ml=allLeads.filter(l=>l.assigned_to===m.name&&l.status==='Won');return ml.reduce((s,l)=>s+(parseFloat(l.quoted_fees)||0),0);});
+    const memberRevs=allMembers.map(m=>{const ml=allLeads.filter(l=>l.assigned_to===m.name&&isWon(l));return ml.reduce((s,l)=>s+(parseFloat(l.quoted_fees)||0),0);});
     mkChart('chart-rev-member','bar',{labels:allMembers.map(m=>m.name.split(' ')[0]),datasets:[{label:'Revenue Won',data:memberRevs,backgroundColor:allMembers.map((_,i)=>MEMBER_COLORS[i%MEMBER_COLORS.length]+'99'),borderColor:allMembers.map((_,i)=>MEMBER_COLORS[i%MEMBER_COLORS.length]),borderWidth:1}]},{plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#475569'}},y:{ticks:{color:'#475569'},beginAtZero:true}}});
   }
 }
@@ -1983,7 +2010,7 @@ function renderTeam(){
   document.getElementById('team-stat-cards').innerHTML=allMembers.map((m,i)=>{
     const fn=(m.name||'').split(' ')[0].toLowerCase();
     const ml=allLeads.filter(l=>{const at=(l.assigned_to||'').toLowerCase();return at===m.name.toLowerCase()||at===fn;});
-    const wonL=ml.filter(l=>l.status==='Won');
+    const wonL=ml.filter(l=>isWon(l));
     const rev=wonL.reduce((s,l)=>s+(parseFloat(l.quoted_fees)||0),0);
     const hot=ml.filter(l=>['Onboarding Meeting','Quotation Sent','Proposal Sent'].includes(l.status)).length;
     const color=MEMBER_COLORS[i%MEMBER_COLORS.length];
