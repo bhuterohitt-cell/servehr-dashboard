@@ -806,7 +806,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
   </div>
 </div>
 
-<!-- ADD BROCHURE MODAL (no area field) -->
+<!-- ADD BROCHURE MODAL -->
 <div class="modal-overlay" id="add-brochure-modal">
   <div class="modal add-modal">
     <button class="modal-close" onclick="closeModal('add-brochure-modal')">✕</button>
@@ -819,7 +819,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
       <div class="form-group full"><label class="form-label">Address</label><input type="text" class="form-input" id="nb-address" placeholder="Full address"/></div>
       <div class="form-group"><label class="form-label">Contact Person</label><input type="text" class="form-input" id="nb-contact" placeholder="Name"/></div>
       <div class="form-group"><label class="form-label">Phone</label><input type="text" class="form-input" id="nb-phone" placeholder="+91…"/></div>
-      <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="nb-email" placeholder="email@company.com"/></div>
       <div class="form-group"><label class="form-label">Status</label>
         <select class="form-select" id="nb-status-select">
           <option value="Pending">Pending</option>
@@ -841,14 +840,13 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
     <button class="modal-close" onclick="closeModal('csv-import-modal')">✕</button>
     <div class="modal-title">⬆ Bulk Import Brochures via CSV</div>
 
-    <!-- Step indicators -->
     <div class="csv-step-indicator" id="csv-steps">
       <div class="csv-step active" id="csv-step-ind-1"></div>
       <div class="csv-step" id="csv-step-ind-2"></div>
       <div class="csv-step" id="csv-step-ind-3"></div>
     </div>
 
-    <!-- Step 1: Drop Zone + Template -->
+    <!-- Step 1 -->
     <div id="csv-step-1">
       <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Step 1 — Upload your file. Any column names work — you'll map them next.</div>
       <div class="csv-drop-zone" id="csv-drop-zone" onclick="document.getElementById('csv-file-input').click()"
@@ -863,16 +861,15 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
         <div style="font-family:var(--mono);font-size:10px;color:var(--muted);line-height:1.8;">
           <strong style="color:var(--text);">Company:</strong> company, company_name, name, firm, organisation, business<br>
           <strong style="color:var(--text);">Address:</strong> address, addr, location, office_address, full_address<br>
-          <strong style="color:var(--text);">Contact:</strong> contact, contact_person, contact_name, person, name (if no company col)<br>
+          <strong style="color:var(--text);">Contact:</strong> contact, contact_person, contact_name, person<br>
           <strong style="color:var(--text);">Phone:</strong> phone, mobile, contact_phone, tel, number, ph<br>
-          <strong style="color:var(--text);">Email:</strong> email, contact_email, mail, e_mail<br>
           <strong style="color:var(--text);">Notes:</strong> notes, remarks, comment
         </div>
         <div style="margin-top:10px;"><button class="import-csv-btn" onclick="downloadCsvTemplate()">⬇ Download Template</button></div>
       </div>
     </div>
 
-    <!-- Step 2: Field Mapping -->
+    <!-- Step 2 -->
     <div id="csv-step-2" style="display:none;">
       <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Step 2 — Match your columns. Required: <strong style="color:var(--text);">Company</strong>. Everything else is optional.</div>
       <div style="overflow-x:auto;margin-bottom:12px;">
@@ -894,7 +891,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
       </div>
     </div>
 
-    <!-- Step 3: Preview + Import -->
+    <!-- Step 3 -->
     <div id="csv-step-3" style="display:none;">
       <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Step 3 — Review and import.</div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
@@ -909,7 +906,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
           <thead>
             <tr>
               <th>#</th><th>Company</th><th>Address</th>
-              <th>Contact</th><th>Phone</th><th>Email</th><th>Notes</th>
+              <th>Contact</th><th>Phone</th><th>Notes</th>
             </tr>
           </thead>
           <tbody id="csv-preview-body"></tbody>
@@ -993,9 +990,6 @@ const DEFAULT_PASS = 'servehr2024';
 const MANAGER_PASS = 'manager2024';
 const MEMBER_COLORS = ['#16a34a','#2563eb','#7c3aed','#ea580c','#0891b2','#ca8a04','#dc2626'];
 
-// ══════════════════════════════════════════════════════
-// PIPELINE STAGES CONFIG
-// ══════════════════════════════════════════════════════
 const PIPELINE_STAGES = [
   {key:'New Lead',           label:'New Lead',          color:'#7c3aed', bg:'rgba(124,58,237,.1)'},
   {key:'Not Responded',      label:'Not Responded',     color:'#ca8a04', bg:'rgba(202,138,4,.1)'},
@@ -1041,7 +1035,6 @@ function classifyScope(raw) {
   return {label: raw.length > 20 ? raw.slice(0,18)+'…' : raw, cls:'scope-other'};
 }
 
-// Helper: 'Payment Received' is the new Won — also handles legacy 'Won' status
 function isWon(l){ return l.status==='Payment Received'||l.status==='Won'; }
 
 // ══════════════════════════════════════════════════════
@@ -1339,7 +1332,7 @@ function scopeBadgeClass(s){
 }
 
 // ══════════════════════════════════════════════════════
-// PIPELINE — Dead Horse moved to LEFT for quick discard
+// PIPELINE
 // ══════════════════════════════════════════════════════
 let dragLeadId=null;
 
@@ -1347,7 +1340,6 @@ function renderPipeline(leads, targetId) {
   const el=document.getElementById(targetId);
   if(!el) return;
 
-  // Active pipeline stages (excluding dead)
   const activeStages = [
     'New Lead',
     'Quotation Sent','Proposal Sent','Onboarding Meeting',
@@ -1396,16 +1388,12 @@ function renderPipeline(leads, targetId) {
   function deadArrow() { return '<div class="dead-separator"><div class="dead-sep-line"></div><div class="dead-sep-label">discard</div><div class="dead-sep-line"></div></div>'; }
 
   let html = '';
-  // ── DEAD HORSE FIRST (quick discard on the left) ──
   html += makeCol(deadStage, leads);
   html += deadArrow();
-
-  // ── ACTIVE STAGES ──
   for(let i=0; i<activeStages.length; i++) {
     html += makeCol(activeStages[i], leads);
     if(i < activeStages.length - 1) html += arrow();
   }
-
   el.innerHTML = html;
 }
 
@@ -1635,7 +1623,7 @@ async function updateLeadStatus(id,status){
 }
 
 // ══════════════════════════════════════════════════════
-// BROCHURE — single table, no area
+// BROCHURE
 // ══════════════════════════════════════════════════════
 function renderBrochure(){
   const b=getMyBrochures();
@@ -1676,7 +1664,7 @@ async function toggleBrochure(id,cur){
 function openAddBrochure(){
   document.getElementById('add-brochure-modal').classList.add('open');
   document.getElementById('nb-status').textContent='';
-  ['nb-company','nb-address','nb-contact','nb-phone','nb-email','nb-notes'].forEach(id=>document.getElementById(id).value='');
+  ['nb-company','nb-address','nb-contact','nb-phone','nb-notes'].forEach(id=>document.getElementById(id).value='');
 }
 
 async function submitNewBrochure(){
@@ -1690,7 +1678,6 @@ async function submitNewBrochure(){
     address:document.getElementById('nb-address').value.trim(),
     contact_person:document.getElementById('nb-contact').value.trim(),
     contact_phone:document.getElementById('nb-phone').value.trim(),
-    contact_email:document.getElementById('nb-email').value.trim(),
     status:document.getElementById('nb-status-select').value,
     notes:document.getElementById('nb-notes').value.trim(),
     assigned_to:currentUser.name
@@ -1708,17 +1695,14 @@ async function submitNewBrochure(){
 }
 
 // ══════════════════════════════════════════════════════
-// CSV BULK IMPORT — with field mapping step
+// CSV BULK IMPORT — contact_email removed (not in DB schema)
 // ══════════════════════════════════════════════════════
-
-// Target fields we want to map to
 const CSV_TARGET_FIELDS = [
-  {key:'company',    label:'Company Name', required:true,  aliases:['company','company_name','name','firm','organisation','organization','business','entity','client']},
-  {key:'address',    label:'Address',      required:false, aliases:['address','addr','location','office_address','full_address','office','place']},
+  {key:'company',        label:'Company Name',   required:true,  aliases:['company','company_name','name','firm','organisation','organization','business','entity','client']},
+  {key:'address',        label:'Address',        required:false, aliases:['address','addr','location','office_address','full_address','office','place']},
   {key:'contact_person', label:'Contact Person', required:false, aliases:['contact','contact_person','contact_name','person','contact person','person_name','representative','hr','hr_name']},
-  {key:'contact_phone',  label:'Phone',    required:false, aliases:['phone','mobile','contact_phone','tel','number','ph','cell','contact_number','mob']},
-  {key:'contact_email',  label:'Email',    required:false, aliases:['email','contact_email','mail','e_mail','e-mail','email_id']},
-  {key:'notes',      label:'Notes',        required:false, aliases:['notes','remarks','comment','comments','note','remark','description']},
+  {key:'contact_phone',  label:'Phone',          required:false, aliases:['phone','mobile','contact_phone','tel','number','ph','cell','contact_number','mob']},
+  {key:'notes',          label:'Notes',          required:false, aliases:['notes','remarks','comment','comments','note','remark','description']},
 ];
 
 function openCsvImport(){
@@ -1774,7 +1758,6 @@ function splitCsvLine(line){
   return result;
 }
 
-// Auto-detect: for each CSV column, find best matching target field
 function autoDetectMapping(){
   csvMapping={};
   csvHeaders.forEach(h=>{
@@ -1795,7 +1778,6 @@ function autoDetectMapping(){
 
 function showMappingStep(){
   const tbody=document.getElementById('csv-mapper-body');
-  // Get sample values from first data row
   const sample=csvParsedRows[0]||{};
 
   tbody.innerHTML=csvHeaders.map(h=>{
@@ -1821,9 +1803,7 @@ function showMappingStep(){
 function onMappingChange(sel){
   const col=sel.getAttribute('data-col');
   const val=sel.value;
-  // Prevent duplicate mappings (except skip)
   if(val!=='skip'){
-    // Clear any other column mapped to the same field
     document.querySelectorAll('#csv-mapper-body select').forEach(s=>{
       if(s!==sel && s.value===val){ s.value='skip'; csvMapping[s.getAttribute('data-col')]='skip'; s.className='csv-map-select'; }
     });
@@ -1833,7 +1813,6 @@ function onMappingChange(sel){
 }
 
 function csvConfirmMapping(){
-  // Check company is mapped
   const hasCompany=Object.values(csvMapping).includes('company');
   if(!hasCompany){showToast('You must map a column to "Company Name"',true);return;}
   buildPreview();
@@ -1841,7 +1820,6 @@ function csvConfirmMapping(){
 }
 
 function buildPreview(){
-  // Apply mapping to build normalised rows
   const mappedRows=csvParsedRows.map(row=>{
     const out={_row:row._row};
     Object.entries(csvMapping).forEach(([col,field])=>{
@@ -1865,11 +1843,9 @@ function buildPreview(){
       <td style="font-size:10px;">${r.address||''}</td>
       <td>${r.contact_person||''}</td>
       <td style="font-family:var(--mono);font-size:10px;">${r.contact_phone||''}</td>
-      <td style="font-size:10px;color:var(--muted);">${r.contact_email||''}</td>
       <td style="font-size:10px;color:var(--muted);max-width:100px;overflow:hidden;text-overflow:ellipsis;">${r.notes||''}</td>
     </tr>`).join('');
 
-  // Store normalised rows for import
   csvParsedRows._mapped=mappedRows;
 
   const btn=document.getElementById('do-import-btn');
@@ -1886,7 +1862,6 @@ async function executeCsvImport(){
   document.getElementById('csv-import-progress').style.display='block';
 
   let done=0, failed=0;
-  const today=new Date().toISOString().split('T')[0];
   const batchSize=10;
   const batches=[];
   for(let i=0;i<mappedRows.length;i+=batchSize) batches.push(mappedRows.slice(i,i+batchSize));
@@ -1898,7 +1873,6 @@ async function executeCsvImport(){
       address:r.address||'',
       contact_person:r.contact_person||'',
       contact_phone:r.contact_phone||'',
-      contact_email:r.contact_email||'',
       status:'Pending',
       dispatched_date:null,
       notes:r.notes||'',
@@ -1926,10 +1900,10 @@ async function executeCsvImport(){
 }
 
 function downloadCsvTemplate(){
-  const header='company,address,contact_person,contact_phone,contact_email,notes\n';
-  const s1='ABC Pharma Pvt Ltd,Plot 12 TTC Industrial Area Turbhe,Rahul Shah,9876543210,rahul@abcpharma.com,Interested in compliance\n';
-  const s2='XYZ Chemicals Ltd,Sector 7 Taloja MIDC,Priya Menon,9123456789,,\n';
-  const s3='Omega Textiles,Phase 2 Dombivli MIDC,,,\n';
+  const header='company,address,contact_person,contact_phone,notes\n';
+  const s1='ABC Pharma Pvt Ltd,Plot 12 TTC Industrial Area Turbhe,Rahul Shah,9876543210,Interested in compliance\n';
+  const s2='XYZ Chemicals Ltd,Sector 7 Taloja MIDC,Priya Menon,9123456789,\n';
+  const s3='Omega Textiles,Phase 2 Dombivli MIDC,,\n';
   const blob=new Blob([header+s1+s2+s3],{type:'text/csv'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
