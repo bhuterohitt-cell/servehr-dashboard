@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Team Monthly Calendar</title>
+<style>
+  :root {
+    --col-bg: #ffffff;
+    --col-alt: #f8f8f6;
+    --col-border: #e2e0d8;
+    --col-border-strong: #c8c5bc;
+    --col-text: #1a1917;
+    --col-text-muted: #7a7872;
+    --col-time: #9a9890;
+    --col-header-bg: #1a1917;
+    --col-header-text: #f5f3ee;
+    --col-today: #f0ede4;
+    --col-today-border: #8b6f3e;
+    --col-event-1: #2563eb;
+    --col-event-2: #16a34a;
+    --col-event-3: #9333ea;
+    --col-event-4: #dc2626;
+    --col-event-5: #d97706;
+    --col-btn-bg: #1a1917;
+    --col-btn-text: #f5f3ee;
+    --time-col-width: 52px;
+    --day-header-h: 36px;
+    --hour-h: 56px;
+    --font: 'Georgia', serif;
+    --font-ui: system-ui, -apple-system, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font-ui);
+    background: #f0ede4;
+    color: var(--col-text);
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  #auth-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    gap: 2rem;
+    padding: 2rem;
+  }
+
+  .auth-card {
+    background: #fff;
+    border: 1px solid var(--col-border-strong);
+    border-radius: 4px;
+    padding: 3rem 3.5rem;
+    max-width: 480px;
+    width: 100%;
+    text-align: center;
+  }
+
+  .auth-card h1 {
+    font-family: var(--font);
+    font-size: 26px;
+    font-weight: normal;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.5rem;
+  }
+
+  .auth-card p {
+    font-size: 14px;
+    color: var(--col-text-muted);
+    line-height: 1.6;
+    margin-bottom: 2rem;
+  }
+
+  .setup-steps {
+    background: #f8f8f6;
+    border: 1px solid var(--col-border);
+    border-radius: 4px;
+    padding: 1.25rem;
+    text-align: left;
+    margin-bottom: 1.5rem;
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--col-text-muted);
+  }
+
+  .setup-steps strong { color: var(--col-text); }
+
+  .input-row {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 1.25rem;
+    text-align: left;
+  }
+
+  .input-row label {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--col-text-muted);
+  }
+
+  .input-row input {
+    border: 1px solid var(--col-border-strong);
+    border-radius: 3px;
+    padding: 9px 12px;
+    font-size: 13px;
+    font-family: monospace;
+    outline: none;
+    transition: border-color 0.15s;
+    width: 100%;
+  }
+
+  .input-row input:focus { border-color: var(--col-text); }
+
+  .btn-primary {
+    background: var(--col-btn-bg);
+    color: var(--col-btn-text);
+    border: none;
+    border-radius: 3px;
+    padding: 11px 28px;
+    font-size: 14px;
+    cursor: pointer;
+    width: 100%;
+    transition: opacity 0.15s;
+    font-family: var(--font-ui);
+  }
+
+  .btn-primary:hover { opacity: 0.85; }
+
+  #app-screen { display: none; flex-direction: column; height: 100vh; overflow: hidden; }
+
+  .topbar {
+    background: var(--col-header-bg);
+    color: var(--col-header-text);
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 0 1.25rem;
+    height: 52px;
+    flex-shrink: 0;
+    border-bottom: 1px solid #333;
+  }
+
+  .topbar-title {
+    font-family: var(--font);
+    font-size: 18px;
+    font-weight: normal;
+    letter-spacing: -0.01em;
+    flex: 1;
+  }
+
+  .topbar-nav {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .nav-btn {
+    background: transparent;
+    color: var(--col-header-text);
+    border: 1px solid #444;
+    border-radius: 3px;
+    padding: 5px 12px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.15s;
+    font-family: var(--font-ui);
+  }
+
+  .nav-btn:hover { background: #333; }
+  .nav-btn.today-btn { font-size: 12px; padding: 5px 10px; }
+
+  .month-label {
+    font-size: 15px;
+    font-weight: 600;
+    min-width: 160px;
+    text-align: center;
+    letter-spacing: 0.01em;
+  }
+
+  .status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #22c55e;
+    display: inline-block;
+    margin-right: 6px;
+  }
+
+  .status-text { font-size: 12px; color: #aaa; }
+
+  .print-btn {
+    background: transparent;
+    color: #aaa;
+    border: 1px solid #444;
+    border-radius: 3px;
+    padding: 5px 12px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: var(--font-ui);
+    transition: color 0.15s;
+  }
+
+  .print-btn:hover { color: #fff; border-color: #888; }
+
+  .calendar-container {
+    flex: 1;
+    overflow: auto;
+    background: #f0ede4;
+    padding: 12px;
+  }
+
+  .calendar-wrapper {
+    background: #fff;
+    border: 1px solid var(--col-border-strong);
+    border-radius: 2px;
+    overflow: hidden;
+    min-width: 800px;
+  }
+
+  .day-header-row {
+    display: grid;
+    grid-template-columns: var(--time-col-width) repeat(var(--day-count, 31), 1fr);
+    border-bottom: 1px solid var(--col-border-strong);
+    background: #f5f3ee;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .dh-spacer {
+    border-right: 1px solid var(--col-border-strong);
+    height: var(--day-header-h);
+  }
+
+  .day-col-header {
+    height: var(--day-header-h);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-right: 1px solid var(--col-border);
+    font-size: 11px;
+    gap: 1px;
+    cursor: default;
+    transition: background 0.1s;
+  }
+
+  .day-col-header:last-child { border-right: none; }
+
+  .day-col-header .dow {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--col-text-muted);
+    font-weight: 600;
+  }
+
+  .day-col-header .dom {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--col-text);
+    line-height: 1;
+  }
+
+  .day-col-header.is-today {
+    background: var(--col-today);
+  }
+
+  .day-col-header.is-today .dom {
+    background: var(--col-today-border);
+    color: #fff;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+  }
+
+  .day-col-header.is-weekend { background: #fafaf8; }
+
+  .body-grid {
+    display: grid;
+    grid-template-columns: var(--time-col-width) repeat(var(--day-count, 31), 1fr);
+    overflow: hidden;
+  }
+
+  .time-col {
+    border-right: 1px solid var(--col-border-strong);
+    background: #f5f3ee;
+  }
+
+  .time-slot {
+    height: var(--hour-h);
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-end;
+    padding: 3px 6px 0 0;
+    border-bottom: 1px solid var(--col-border);
+  }
+
+  .time-slot span {
+    font-size: 10px;
+    color: var(--col-time);
+    letter-spacing: 0.03em;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .time-slot:first-child span { opacity: 0; }
+
+  .day-col {
+    border-right: 1px solid var(--col-border);
+    position: relative;
+  }
+
+  .day-col:last-child { border-right: none; }
+  .day-col.is-weekend { background: #fafaf8; }
+  .day-col.is-today { background: var(--col-today); }
+
+  .hour-cell {
+    height: var(--hour-h);
+    border-bottom: 1px solid var(--col-border);
+    position: relative;
+  }
+
+  .hour-cell::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0;
+    top: 50%;
+    border-bottom: 1px dashed rgba(0,0,0,0.06);
+  }
+
+  .events-layer {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+  }
+
+  .event-block {
+    position: absolute;
+    left: 1px;
+    right: 1px;
+    border-radius: 2px;
+    overflow: hidden;
+    padding: 2px 4px;
+    pointer-events: all;
+    cursor: pointer;
+    min-height: 14px;
+    transition: filter 0.1s;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+  }
+
+  .event-block:hover { filter: brightness(1.08); }
+
+  .event-block .ev-time {
+    font-size: 9px;
+    opacity: 0.85;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    line-height: 1.2;
+    letter-spacing: 0.02em;
+  }
+
+  .event-block .ev-title {
+    font-size: 10px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.3;
+  }
+
+  .event-block .ev-desc {
+    font-size: 9px;
+    opacity: 0.75;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.3;
+  }
+
+  .now-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #dc2626;
+    z-index: 5;
+    pointer-events: none;
+  }
+
+  .now-line::before {
+    content: '';
+    position: absolute;
+    left: -3px;
+    top: -4px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #dc2626;
+  }
+
+  .tooltip {
+    position: fixed;
+    background: #1a1917;
+    color: #f5f3ee;
+    border-radius: 4px;
+    padding: 10px 14px;
+    font-size: 12px;
+    line-height: 1.6;
+    max-width: 260px;
+    pointer-events: none;
+    z-index: 1000;
+    display: none;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  }
+
+  .tooltip .tt-title { font-weight: 600; font-size: 13px; margin-bottom: 4px; }
+  .tooltip .tt-time { color: #aaa; font-size: 11px; }
+  .tooltip .tt-loc { color: #ccc; font-size: 11px; margin-top: 2px; }
+
+  .loading-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(240,237,228,0.85);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 500;
+    gap: 1rem;
+    font-size: 14px;
+    color: var(--col-text-muted);
+  }
+
+  .spinner {
+    width: 28px; height: 28px;
+    border: 2px solid var(--col-border-strong);
+    border-top-color: var(--col-text);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .error-banner {
+    background: #fef2f2;
+    border: 1px solid #fca5a5;
+    color: #991b1b;
+    padding: 10px 16px;
+    font-size: 13px;
+    border-radius: 3px;
+    margin: 12px;
+    display: none;
+  }
+
+  @media print {
+    body { background: #fff; }
+    .topbar { display: none; }
+    .calendar-container { padding: 0; overflow: visible; }
+    .calendar-wrapper { border: none; }
+    .day-header-row { position: static; }
+    #auth-screen { display: none !important; }
+    #app-screen { display: flex !important; height: auto; overflow: visible; }
+    .calendar-container { overflow: visible; }
+  }
+</style>
+</head>
+<body>
+
+<div id="auth-screen">
+  <div class="auth-card">
+    <h1>Team Calendar</h1>
+    <p>Monthly view with hourly time scale — synced to your shared Google Calendar.</p>
+
+    <div class="setup-steps">
+      <strong>One-time setup (2 min):</strong><br>
+      1. Go to <strong>console.cloud.google.com</strong> → New Project<br>
+      2. Enable <strong>Google Calendar API</strong><br>
+      3. Create <strong>OAuth 2.0 credentials</strong> (Web application)<br>
+      4. Add <code>null</code> or your file URL to Authorized Origins<br>
+      5. Paste your <strong>Client ID</strong> below
+    </div>
+
+    <div class="input-row">
+      <label>Google OAuth Client ID</label>
+      <input type="text" id="client-id-input" placeholder="xxxxxxxx.apps.googleusercontent.com" />
+    </div>
+
+    <div class="input-row">
+      <label>Calendar ID (optional — leave blank for primary)</label>
+      <input type="text" id="cal-id-input" placeholder="primary  or  your-group@group.calendar.google.com" />
+    </div>
+
+    <button class="btn-primary" onclick="startAuth()">Connect Google Calendar →</button>
+  </div>
+</div>
+
+<div id="app-screen">
+  <div class="topbar">
+    <div class="topbar-title">Team Calendar</div>
+    <div class="topbar-nav">
+      <button class="nav-btn today-btn" onclick="goToday()">Today</button>
+      <button class="nav-btn" onclick="changeMonth(-1)">◀</button>
+      <span class="month-label" id="month-label">—</span>
+      <button class="nav-btn" onclick="changeMonth(1)">▶</button>
+    </div>
+    <span class="status-dot" id="status-dot"></span>
+    <span class="status-text" id="status-text">Loading…</span>
+    <button class="nav-btn" onclick="refreshEvents()" title="Refresh">↻ Refresh</button>
+    <button class="print-btn" onclick="window.print()">⊞ Screenshot / Print</button>
+  </div>
+
+  <div class="error-banner" id="error-banner"></div>
+
+  <div class="calendar-container" id="calendar-container">
+    <div class="calendar-wrapper" id="calendar-wrapper"></div>
+  </div>
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+const HOURS = 24;
+const HOUR_LABELS = Array.from({length: HOURS}, (_, i) => {
+  if (i === 0) return '12 AM';
+  if (i < 12) return i + ' AM';
+  if (i === 12) return '12 PM';
+  return (i - 12) + ' PM';
+});
+
+const EVENT_COLORS = [
+  { bg: '#2563eb', text: '#fff' },
+  { bg: '#16a34a', text: '#fff' },
+  { bg: '#9333ea', text: '#fff' },
+  { bg: '#dc2626', text: '#fff' },
+  { bg: '#d97706', text: '#fff' },
+  { bg: '#0891b2', text: '#fff' },
+  { bg: '#be185d', text: '#fff' },
+  { bg: '#65a30d', text: '#fff' },
+];
+
+let state = {
+  clientId: '',
+  calId: 'primary',
+  currentYear: new Date().getFullYear(),
+  currentMonth: new Date().getMonth(),
+  events: [],
+  tokenClient: null,
+  accessToken: null,
+  colorMap: {},
+  colorIdx: 0,
+};
+
+function getEventColor(calendarId) {
+  if (!state.colorMap[calendarId]) {
+    state.colorMap[calendarId] = EVENT_COLORS[state.colorIdx % EVENT_COLORS.length];
+    state.colorIdx++;
+  }
+  return state.colorMap[calendarId];
+}
+
+function startAuth() {
+  const cid = document.getElementById('client-id-input').value.trim();
+  const calId = document.getElementById('cal-id-input').value.trim() || 'primary';
+  if (!cid) { alert('Please enter your Google OAuth Client ID.'); return; }
+  state.clientId = cid;
+  state.calId = calId;
+  localStorage.setItem('tcal_client_id', cid);
+  localStorage.setItem('tcal_cal_id', calId);
+  loadGoogleApis();
+}
+
+function loadGoogleApis() {
+  const s1 = document.createElement('script');
+  s1.src = 'https://accounts.google.com/gsi/client';
+  s1.onload = initOAuth;
+  document.head.appendChild(s1);
+}
+
+function initOAuth() {
+  state.tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: state.clientId,
+    scope: 'https://www.googleapis.com/auth/calendar.readonly',
+    callback: (resp) => {
+      if (resp.error) { showError('Auth error: ' + resp.error); return; }
+      state.accessToken = resp.access_token;
+      document.getElementById('auth-screen').style.display = 'none';
+      document.getElementById('app-screen').style.display = 'flex';
+      refreshEvents();
+    },
+  });
+  state.tokenClient.requestAccessToken({ prompt: 'consent' });
+}
+
+function refreshEvents() {
+  setStatus('Syncing…', false);
+  showLoading(true);
+  fetchEvents().then(events => {
+    state.events = events;
+    renderCalendar();
+    setStatus('Synced', true);
+    showLoading(false);
+  }).catch(err => {
+    showError('Failed to fetch events: ' + err.message);
+    showLoading(false);
+  });
+}
+
+async function fetchEvents() {
+  const year = state.currentYear;
+  const month = state.currentMonth;
+  const timeMin = new Date(year, month, 1).toISOString();
+  const timeMax = new Date(year, month + 1, 0, 23, 59, 59).toISOString();
+
+  const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(state.calId)}/events?` +
+    new URLSearchParams({
+      timeMin, timeMax,
+      singleEvents: 'true',
+      orderBy: 'startTime',
+      maxResults: '500',
+    });
+
+  const res = await fetch(url, {
+    headers: { Authorization: 'Bearer ' + state.accessToken }
+  });
+
+  if (res.status === 401) {
+    state.accessToken = null;
+    state.tokenClient.requestAccessToken({ prompt: '' });
+    throw new Error('Token expired — re-authenticating.');
+  }
+
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.error?.message || 'Unknown error');
+  }
+
+  const data = await res.json();
+  return data.items || [];
+}
+
+function renderCalendar() {
+  const year = state.currentYear;
+  const month = state.currentMonth;
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const today = new Date();
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+
+  const DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+  document.getElementById('month-label').textContent = `${MONTHS[month]} ${year}`;
+
+  const wrapper = document.getElementById('calendar-wrapper');
+  wrapper.style.setProperty('--day-count', daysInMonth);
+
+  let headerHTML = `<div class="day-header-row"><div class="dh-spacer"></div>`;
+  for (let d = 1; d <= daysInMonth; d++) {
+    const date = new Date(year, month, d);
+    const dow = date.getDay();
+    const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isToday = dateStr === todayStr;
+    const isWeekend = dow === 0 || dow === 6;
+    const domEl = isToday
+      ? `<span class="dom" style="background:#8b6f3e;color:#fff;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;">${d}</span>`
+      : `<span class="dom">${d}</span>`;
+    headerHTML += `<div class="day-col-header${isToday?' is-today':''}${isWeekend?' is-weekend':''}">
+      <span class="dow">${DOW[dow]}</span>${domEl}</div>`;
+  }
+  headerHTML += `</div>`;
+
+  let timeColHTML = `<div class="time-col">`;
+  for (let h = 0; h < HOURS; h++) {
+    timeColHTML += `<div class="time-slot"><span>${HOUR_LABELS[h]}</span></div>`;
+  }
+  timeColHTML += `</div>`;
+
+  const eventsByDay = {};
+  state.events.forEach(ev => {
+    const start = ev.start?.dateTime || ev.start?.date;
+    const end = ev.end?.dateTime || ev.end?.date;
+    if (!start) return;
+
+    const startDate = new Date(start);
+    const endDate = end ? new Date(end) : new Date(startDate.getTime() + 3600000);
+
+    const startDay = startDate.getDate();
+    const startMonth = startDate.getMonth();
+    const startYear = startDate.getFullYear();
+
+    if (startYear !== year || startMonth !== month) return;
+
+    if (!eventsByDay[startDay]) eventsByDay[startDay] = [];
+    eventsByDay[startDay].push({ ev, startDate, endDate, isAllDay: !!ev.start?.date && !ev.start?.dateTime });
+  });
+
+  let dayColsHTML = ``;
+  for (let d = 1; d <= daysInMonth; d++) {
+    const date = new Date(year, month, d);
+    const dow = date.getDay();
+    const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isToday = dateStr === todayStr;
+    const isWeekend = dow === 0 || dow === 6;
+
+    let cellsHTML = ``;
+    for (let h = 0; h < HOURS; h++) {
+      cellsHTML += `<div class="hour-cell"></div>`;
+    }
+
+    let eventsHTML = `<div class="events-layer">`;
+    const dayEvs = eventsByDay[d] || [];
+
+    dayEvs.forEach(({ ev, startDate, endDate, isAllDay }) => {
+      const color = getEventColor(ev.organizer?.email || 'default');
+
+      if (isAllDay) {
+        const topPx = 2;
+        const heightPx = 16;
+        const timeLabel = 'All day';
+        const title = ev.summary || '(no title)';
+        eventsHTML += `<div class="event-block" data-id="${ev.id}"
+          style="top:${topPx}px;height:${heightPx}px;background:${color.bg};color:${color.text};opacity:0.9;"
+          onmouseenter="showTooltip(event,'${esc(title)}','${timeLabel}','${esc(ev.location||'')}')"
+          onmouseleave="hideTooltip()">
+          <div class="ev-title">${esc(title)}</div>
+        </div>`;
+        return;
+      }
+
+      const startH = startDate.getHours() + startDate.getMinutes() / 60;
+      const endH = endDate.getHours() + endDate.getMinutes() / 60;
+      const topPx = startH * 56;
+      const heightPx = Math.max(14, (endH - startH) * 56 - 2);
+
+      const fmt = t => {
+        const h = t.getHours(), m = t.getMinutes();
+        const ap = h < 12 ? 'a' : 'p';
+        const hr = h === 0 ? 12 : h > 12 ? h - 12 : h;
+        return `${hr}${m ? ':' + String(m).padStart(2,'0') : ''}${ap}`;
+      };
+
+      const timeLabel = `${fmt(startDate)} – ${fmt(endDate)}`;
+      const title = ev.summary || '(no title)';
+
+      eventsHTML += `<div class="event-block" data-id="${ev.id}"
+        style="top:${topPx}px;height:${heightPx}px;background:${color.bg};color:${color.text};"
+        onmouseenter="showTooltip(event,'${esc(title)}','${timeLabel}','${esc(ev.location||'')}')"
+        onmouseleave="hideTooltip()">
+        <div class="ev-time">${timeLabel}</div>
+        <div class="ev-title">${esc(title)}</div>
+      </div>`;
+    });
+
+    if (isToday) {
+      const now = new Date();
+      const nowH = now.getHours() + now.getMinutes() / 60;
+      const topPx = nowH * 56;
+      eventsHTML += `<div class="now-line" style="top:${topPx}px;"></div>`;
+    }
+
+    eventsHTML += `</div>`;
+
+    dayColsHTML += `<div class="day-col${isToday?' is-today':''}${isWeekend?' is-weekend':''}">${cellsHTML}${eventsHTML}</div>`;
+  }
+
+  wrapper.innerHTML = headerHTML + `<div class="body-grid">${timeColHTML}${dayColsHTML}</div>`;
+
+  if (state.currentMonth === today.getMonth() && state.currentYear === today.getFullYear()) {
+    const nowH = today.getHours() + today.getMinutes() / 60;
+    const scrollPx = Math.max(0, nowH * 56 - 200);
+    requestAnimationFrame(() => {
+      document.getElementById('calendar-container').scrollTop = scrollPx;
+    });
+  }
+}
+
+function esc(str) {
+  return (str || '').replace(/'/g, '&#39;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function showTooltip(e, title, time, loc) {
+  const t = document.getElementById('tooltip');
+  t.innerHTML = `<div class="tt-title">${title}</div><div class="tt-time">${time}</div>${loc ? `<div class="tt-loc">📍 ${loc}</div>` : ''}`;
+  t.style.display = 'block';
+  t.style.left = (e.clientX + 14) + 'px';
+  t.style.top = (e.clientY - 10) + 'px';
+}
+
+function hideTooltip() {
+  document.getElementById('tooltip').style.display = 'none';
+}
+
+function changeMonth(delta) {
+  state.currentMonth += delta;
+  if (state.currentMonth > 11) { state.currentMonth = 0; state.currentYear++; }
+  if (state.currentMonth < 0) { state.currentMonth = 11; state.currentYear--; }
+  if (state.accessToken) refreshEvents();
+}
+
+function goToday() {
+  const now = new Date();
+  state.currentYear = now.getFullYear();
+  state.currentMonth = now.getMonth();
+  if (state.accessToken) refreshEvents();
+}
+
+function setStatus(msg, ok) {
+  document.getElementById('status-text').textContent = msg;
+  document.getElementById('status-dot').style.background = ok ? '#22c55e' : '#f59e0b';
+}
+
+function showError(msg) {
+  const b = document.getElementById('error-banner');
+  b.textContent = msg;
+  b.style.display = 'block';
+  setTimeout(() => b.style.display = 'none', 8000);
+}
+
+let loadingEl = null;
+function showLoading(on) {
+  if (on && !loadingEl) {
+    loadingEl = document.createElement('div');
+    loadingEl.className = 'loading-overlay';
+    loadingEl.innerHTML = '<div class="spinner"></div><div>Fetching calendar…</div>';
+    document.body.appendChild(loadingEl);
+  } else if (!on && loadingEl) {
+    loadingEl.remove();
+    loadingEl = null;
+  }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  const savedCid = localStorage.getItem('tcal_client_id');
+  const savedCal = localStorage.getItem('tcal_cal_id');
+  if (savedCid) {
+    document.getElementById('client-id-input').value = savedCid;
+    document.getElementById('cal-id-input').value = savedCal || 'primary';
+  }
+});
+</script>
+</body>
+</html>
